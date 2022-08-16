@@ -10,7 +10,7 @@ const User = require("../models/user");
 const UserVerification = require("../models/user-verification");
 const PasswordReset = require("../models/password-reset");
 
-const currentUrl = "https://investment-app-backend.herokuapp.com/";
+const currentUrl = "https://ni-hire-backend.herokuapp.com/";
 
 let transporter = nodemailer.createTransport({
   service: "gmail",
