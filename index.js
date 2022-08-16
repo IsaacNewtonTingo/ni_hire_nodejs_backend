@@ -14,3 +14,7 @@ app.listen(PORT, () => {
 });
 
 require("./config/db");
+
+const UserRouter = require("./api/user");
+
+app.use("/user", UserRouter);
