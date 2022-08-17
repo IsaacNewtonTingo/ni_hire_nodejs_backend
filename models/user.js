@@ -6,8 +6,14 @@ const UserSchema = new Schema({
   lastName: String,
   email: String,
   phoneNumber: Number,
+  profilePicture: String,
+  bio: String,
+  location: String,
   password: String,
   verified: Boolean,
+  isFeatured: Boolean,
+  generalPromotedTitle: String,
+  dateFeatured: Date,
 });
 
 const User = mongoose.model("User", UserSchema);

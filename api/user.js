@@ -63,6 +63,13 @@ router.post("/signup", async (req, res) => {
                 phoneNumber,
                 password: hashedPassword,
                 verified: false,
+
+                bio: "",
+                location: "",
+                profilePicture: "",
+                isFeatured: false,
+                generalPromotedTitle: "",
+                dateFeatured: "",
               });
               newUser
                 .save()
@@ -239,7 +246,7 @@ router.post("/signin", (req, res) => {
   email = email.trim();
   password = password.trim();
 
-  if (email == "" || password == "") {
+  if (!email || !password) {
     res.json({
       status: "Failed",
       message: "All fields are required",
@@ -259,38 +266,10 @@ router.post("/signin", (req, res) => {
               .compare(password, hashedPassword)
               .then(async (result) => {
                 if (result) {
-                  const phoneNumber = data[0].phoneNumber;
-
-                  //check if user records exist in registration fee payment
-
-                  await RegFee.find({ phoneNumber })
-                    .then((result) => {
-                      if (result.length > 0) {
-                        //Exists, redirect to home screen
-                        res.json({
-                          status: "Success",
-                          message:
-                            "Signin successfull. You had already paid registration fee",
-                          data: data,
-                        });
-                      } else {
-                        //Doesn't exist, redirect to reg fee payment
-
-                        res.json({
-                          status: "Pending",
-                          message: "Pay registration fee",
-                          data: data,
-                        });
-                      }
-                    })
-                    .catch((err) => {
-                      console.log(err);
-                      res.json({
-                        status: "Failed",
-                        message:
-                          "Error occured while checking registration fee details.",
-                      });
-                    });
+                  res.json({
+                    status: "Success",
+                    message: "Login successfull",
+                  });
                 } else {
                   res.json({
                     status: "Failed",
