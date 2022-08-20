@@ -1,6 +1,7 @@
 const express = require("express");
 const { Category } = require("../models/add-category");
 const { Service } = require("../models/add-service");
+const { ServiceProvider } = require("../models/service-provider");
 const User = require("../models/user");
 const router = express.Router();
 
@@ -15,16 +16,12 @@ router.post("/add-service", async (req, res) => {
     image2,
     image3,
     rate,
-    rating,
-    isPromoted,
-    datePromoted,
-    providerName,
+    providerFirstName,
+    providerLastName,
     providerPhoneNumber,
     providerEmail,
     providerUserID,
     providerLocation,
-    savedBy,
-    serviceViewedBy,
   } = req.body;
 
   if (!serviceName) {
@@ -47,44 +44,47 @@ router.post("/add-service", async (req, res) => {
       status: "Failed",
       message: "Category ID is missing",
     });
-  }
-  //   else if (!description) {
-  //     res.json({
-  //       status: "Failed",
-  //       message: "Please input a description",
-  //     });
-  //   } else if (!rate) {
-  //     res.json({
-  //       status: "Failed",
-  //       message: "Please input your rate",
-  //     });
-  //   } else if (!providerName) {
-  //     res.json({
-  //       status: "Failed",
-  //       message: "Service provider name is missing",
-  //     });
-  //   } else if (!providerPhoneNumber) {
-  //     res.json({
-  //       status: "Failed",
-  //       message: "Service provider phone number is missing",
-  //     });
-  //   } else if (!providerEmail) {
-  //     res.json({
-  //       status: "Failed",
-  //       message: "Service provider email is missing",
-  //     });
-  //   } else if (!providerUserID) {
-  //     res.json({
-  //       status: "Failed",
-  //       message: "Service provider user ID is missing",
-  //     });
-  //   } else if (!providerLocation) {
-  //     res.json({
-  //       status: "Failed",
-  //       message: "Service provider location is missing",
-  //     });
-  //   }
-  else {
+  } else if (!description) {
+    res.json({
+      status: "Failed",
+      message: "Please input a description",
+    });
+  } else if (!rate) {
+    res.json({
+      status: "Failed",
+      message: "Please input your rate",
+    });
+  } else if (!providerFirstName) {
+    res.json({
+      status: "Failed",
+      message: "Service provider first name is missing",
+    });
+  } else if (!providerLastName) {
+    res.json({
+      status: "Failed",
+      message: "Service provider last name is missing",
+    });
+  } else if (!providerPhoneNumber) {
+    res.json({
+      status: "Failed",
+      message: "Service provider phone number is missing",
+    });
+  } else if (!providerEmail) {
+    res.json({
+      status: "Failed",
+      message: "Service provider email is missing",
+    });
+  } else if (!providerUserID) {
+    res.json({
+      status: "Failed",
+      message: "Service provider user ID is missing",
+    });
+  } else if (!providerLocation) {
+    res.json({
+      status: "Failed",
+      message: "Service provider location is missing",
+    });
+  } else {
     //check if user exists
     await User.find({ _id: providerUserID })
       .then(async (response) => {
@@ -101,22 +101,49 @@ router.post("/add-service", async (req, res) => {
                   if (serviceID.match(/^[0-9a-fA-F]{24}$/)) {
                     //check if service exists
 
-                    await Service.findById(serviceID).then((response) => {
+                    await Service.findById(serviceID).then(async (response) => {
                       if (response) {
                         //save to db
 
- 
-
-
-
-
-
-
-                        res.json({
-                          status: "Success",
-                          message: "Service found in db",
-                          data: response,
+                        const newServiceProvider = ServiceProvider({
+                          serviceName,
+                          serviceID,
+                          serviceCategoryName,
+                          serviceCategoryID,
+                          description,
+                          image1,
+                          image2,
+                          image3,
+                          rate: parseInt(rate.replace(/,/g, "")),
+                          rating: 0,
+                          isPromoted: false,
+                          datePromoted: "",
+                          providerFirstName,
+                          providerLastName,
+                          providerPhoneNumber,
+                          providerEmail,
+                          providerUserID,
+                          providerLocation,
+                          savedBy: [],
+                          serviceViewedBy: [],
                         });
+
+                        await newServiceProvider
+                          .save()
+                          .then((response) => {
+                            res.json({
+                              status: "Success",
+                              message: "Successfully posted",
+                              data: response,
+                            });
+                          })
+                          .catch((err) => {
+                            console.log(err);
+                            res.json({
+                              status: "Failed",
+                              message: "Error occured while posting service",
+                            });
+                          });
                       } else {
                         //service not found
                         res.json({

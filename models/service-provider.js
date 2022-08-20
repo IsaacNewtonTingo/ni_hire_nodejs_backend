@@ -15,7 +15,8 @@ const ServiceProviderSchema = new Schema({
   isPromoted: Boolean,
   datePromoted: Date,
 
-  providerName: String,
+  providerFirstName: String,
+  providerLastName: String,
   providerPhoneNumber: Number,
   providerEmail: String,
   providerUserID: String,
