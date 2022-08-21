@@ -7,37 +7,20 @@ const router = express.Router();
 
 router.post("/add-service", async (req, res) => {
   const {
-    serviceName,
     serviceID,
-    serviceCategoryName,
     serviceCategoryID,
     description,
     image1,
     image2,
     image3,
     rate,
-    providerFirstName,
-    providerLastName,
-    providerPhoneNumber,
-    providerEmail,
     providerUserID,
-    providerLocation,
   } = req.body;
 
-  if (!serviceName) {
-    res.json({
-      status: "Failed",
-      message: "Please input the service name",
-    });
-  } else if (!serviceID) {
+  if (!serviceID) {
     res.json({
       status: "Failed",
       message: "Service ID is missing",
-    });
-  } else if (!serviceCategoryName) {
-    res.json({
-      status: "Failed",
-      message: "Please input the category name",
     });
   } else if (!serviceCategoryID) {
     res.json({
@@ -54,35 +37,10 @@ router.post("/add-service", async (req, res) => {
       status: "Failed",
       message: "Please input your rate",
     });
-  } else if (!providerFirstName) {
-    res.json({
-      status: "Failed",
-      message: "Service provider first name is missing",
-    });
-  } else if (!providerLastName) {
-    res.json({
-      status: "Failed",
-      message: "Service provider last name is missing",
-    });
-  } else if (!providerPhoneNumber) {
-    res.json({
-      status: "Failed",
-      message: "Service provider phone number is missing",
-    });
-  } else if (!providerEmail) {
-    res.json({
-      status: "Failed",
-      message: "Service provider email is missing",
-    });
   } else if (!providerUserID) {
     res.json({
       status: "Failed",
       message: "Service provider user ID is missing",
-    });
-  } else if (!providerLocation) {
-    res.json({
-      status: "Failed",
-      message: "Service provider location is missing",
     });
   } else {
     //check if user exists
@@ -106,9 +64,7 @@ router.post("/add-service", async (req, res) => {
                         //save to db
 
                         const newServiceProvider = ServiceProvider({
-                          serviceName,
                           serviceID,
-                          serviceCategoryName,
                           serviceCategoryID,
                           description,
                           image1,
@@ -118,12 +74,7 @@ router.post("/add-service", async (req, res) => {
                           rating: 0,
                           isPromoted: false,
                           datePromoted: "",
-                          providerFirstName,
-                          providerLastName,
-                          providerPhoneNumber,
-                          providerEmail,
                           providerUserID,
-                          providerLocation,
                           savedBy: [],
                           serviceViewedBy: [],
                         });
