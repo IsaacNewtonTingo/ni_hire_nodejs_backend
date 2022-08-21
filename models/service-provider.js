@@ -3,11 +3,11 @@ const Schema = mongoose.Schema;
 
 const ServiceProviderSchema = new Schema({
   serviceID: {
-    Type: mongoose.Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: "Service",
   },
   serviceCategoryID: {
-    Type: mongoose.Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: "Category",
   },
   description: String,
@@ -20,7 +20,7 @@ const ServiceProviderSchema = new Schema({
   datePromoted: Date,
 
   providerUserID: {
-    Type: mongoose.Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: "User",
   },
 
