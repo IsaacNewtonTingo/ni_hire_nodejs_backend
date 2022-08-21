@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
 
-const { Category } = require("../models/add-category");
-const { Service } = require("../models/add-service");
+const { Category } = require("../models/category");
+const { Service } = require("../models/service");
 
 router.post("/add-service", async (req, res) => {
   const { serviceName, categoryID } = req.body;

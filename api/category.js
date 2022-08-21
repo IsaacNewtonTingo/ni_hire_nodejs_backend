@@ -1,5 +1,5 @@
 const express = require("express");
-const { Category } = require("../models/add-category");
+const { Category } = require("../models/category");
 const router = express.Router();
 
 router.post("/add-category", async (req, res) => {

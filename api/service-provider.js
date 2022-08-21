@@ -1,6 +1,6 @@
 const express = require("express");
-const { Category } = require("../models/add-category");
-const { Service } = require("../models/add-service");
+const { Category } = require("../models/category");
+const { Service } = require("../models/service");
 const { ServiceProvider } = require("../models/service-provider");
 const User = require("../models/user");
 const router = express.Router();
@@ -150,6 +150,7 @@ router.post("/add-service", async (req, res) => {
   }
 });
 
+//Get all service providers
 router.get("/get-all-service-providers", async (req, res) => {
   const serviceProviders = await ServiceProvider.find({})
     .populate("service")
@@ -179,6 +180,7 @@ router.get("/get-all-service-providers", async (req, res) => {
   });
 });
 
+//Get a specific service provider
 router.get("/get-one-service-provider/:id", async (req, res) => {
   const serviceProviderID = req.params.id;
   if (serviceProviderID.match(/^[0-9a-fA-F]{24}$/)) {
@@ -204,6 +206,41 @@ router.get("/get-one-service-provider/:id", async (req, res) => {
     res.json({
       status: "Failed",
       message: "Invalid service provider ID",
+    });
+  }
+});
+
+//Get all service providers in a given category
+router.get("/category/get-all-service-providers/:id", async (req, res) => {
+  const categoryID = req.params.id;
+
+  if (categoryID.match(/^[0-9a-fA-F]{24}$/)) {
+    const serviceProviders = await ServiceProvider.find({
+      category: categoryID,
+    })
+      .populate("service")
+      .populate("category")
+      .populate("provider")
+      .catch((err) => {
+        console.log(err);
+        res.json({
+          status: "Failed",
+          message: "Error occured while getting data",
+        });
+      });
+
+    if (serviceProviders.length <= 0) {
+      res.json({
+        status: "Failed",
+        message: "No data found for the given category",
+      });
+    } else {
+      res.send(serviceProviders);
+    }
+  } else {
+    res.json({
+      status: "Failed",
+      message: "Invalid categoy ID",
     });
   }
 });
