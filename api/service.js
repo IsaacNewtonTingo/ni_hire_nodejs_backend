@@ -3,8 +3,10 @@ const router = express.Router();
 
 const { Category } = require("../models/category");
 const { Service } = require("../models/service");
+const { ServiceProvider } = require("../models/service-provider");
 
-router.post("/add-service", async (req, res) => {
+//add service
+router.post("/post-service", async (req, res) => {
   const { serviceName, categoryID } = req.body;
 
   if (!serviceName) {
@@ -70,6 +72,48 @@ router.post("/add-service", async (req, res) => {
         message: "Invalid ID",
       });
     }
+  }
+});
+
+//get all services
+
+router.get("/get-all-services", async (req, res) => {
+  const services = await Service.find({});
+
+  res.send(services);
+});
+
+//get services in a given category
+router.get("/get-services/:id", async (req, res) => {
+  const categoryID = req.params.id;
+  if (categoryID.match(/^[0-9a-fA-F]{24}$/)) {
+    await Service.find({ category: categoryID })
+      .then((response) => {
+        if (!response) {
+          res.json({
+            status: "Failed",
+            message: "No services found",
+          });
+        } else {
+          res.json({
+            status: "Success",
+            message: "Services found",
+            data: response,
+          });
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        res.json({
+          status: "Failed",
+          message: "Error occured while getting category",
+        });
+      });
+  } else {
+    res.json({
+      status: "Failed",
+      message: "Invalid category ID",
+    });
   }
 });
 

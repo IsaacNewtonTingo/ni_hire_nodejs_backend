@@ -21,5 +21,5 @@ const ServiceRouter = require("./api/service");
 const ServiceProviderRouter = require("./api/service-provider");
 
 app.use("/user", UserRouter);
-app.use("/user/service-provider", ServiceProviderRouter);
-app.use("/user/admin", CategoryRouter, ServiceRouter);
+app.use("/app/service-provider", ServiceProviderRouter);
+app.use("/app/service", CategoryRouter, ServiceRouter);
