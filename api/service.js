@@ -87,9 +87,9 @@ router.get("/get-all-services", async (req, res) => {
 router.get("/get-services/:id", async (req, res) => {
   const categoryID = req.params.id;
   if (categoryID.match(/^[0-9a-fA-F]{24}$/)) {
-    await Service.find({ category: categoryID })
+    await Service.find({ categoryID: categoryID })
       .then((response) => {
-        if (!response) {
+        if (response.length <= 0) {
           res.json({
             status: "Failed",
             message: "No services found",
