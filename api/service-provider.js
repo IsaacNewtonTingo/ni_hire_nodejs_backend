@@ -173,9 +173,39 @@ router.get("/get-all-service-providers", async (req, res) => {
       provider: serviceProviders.provider,
       savedBy: serviceProviders.savedBy,
       serviceViewedBy: serviceProviders.serviceViewedBy,
+      id: serviceProviders._id,
     })),
     // serviceProviderCount,
   });
+});
+
+router.get("/get-one-service-provider/:id", async (req, res) => {
+  const serviceProviderID = req.params.id;
+  if (serviceProviderID.match(/^[0-9a-fA-F]{24}$/)) {
+    //valid ID
+    const serviceProvider = await ServiceProvider.findById(serviceProviderID)
+      .populate("service")
+      .populate("category")
+      .populate("provider")
+      .catch((err) => {
+        console.log(err);
+      });
+
+    if (!serviceProvider) {
+      res.json({
+        status: "Failed",
+        message: "Service provider not found",
+      });
+    } else {
+      res.send(serviceProvider);
+    }
+  } else {
+    //not valid ID
+    res.json({
+      status: "Failed",
+      message: "Invalid service provider ID",
+    });
+  }
 });
 
 module.exports = router;
