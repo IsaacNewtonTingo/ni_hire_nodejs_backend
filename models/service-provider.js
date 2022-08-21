@@ -2,11 +2,11 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const ServiceProviderSchema = new Schema({
-  serviceID: {
+  service: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Service",
   },
-  serviceCategoryID: {
+  category: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Category",
   },
@@ -19,21 +19,13 @@ const ServiceProviderSchema = new Schema({
   isPromoted: Boolean,
   datePromoted: Date,
 
-  providerUserID: {
+  provider: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
   },
 
   savedBy: [String],
   serviceViewedBy: [String],
-
-  serviceName: String,
-  serviceCategoryName: String,
-  providerFirstName: String,
-  providerLastName: String,
-  providerPhoneNumber: Number,
-  providerEmail: String,
-  providerLocation: String,
 });
 
 exports.ServiceProvider = mongoose.model(

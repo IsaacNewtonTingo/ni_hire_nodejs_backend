@@ -7,39 +7,22 @@ const router = express.Router();
 
 router.post("/add-service", async (req, res) => {
   const {
-    serviceName,
-    serviceID,
-    serviceCategoryName,
-    serviceCategoryID,
+    service,
+    category,
     description,
     image1,
     image2,
     image3,
     rate,
-    providerFirstName,
-    providerLastName,
-    providerPhoneNumber,
-    providerEmail,
-    providerUserID,
-    providerLocation,
+    provider,
   } = req.body;
 
-  if (!serviceName) {
-    res.json({
-      status: "Failed",
-      message: "Please input the service name",
-    });
-  } else if (!serviceID) {
+  if (!service) {
     res.json({
       status: "Failed",
       message: "Service ID is missing",
     });
-  } else if (!serviceCategoryName) {
-    res.json({
-      status: "Failed",
-      message: "Please input the category name",
-    });
-  } else if (!serviceCategoryID) {
+  } else if (!category) {
     res.json({
       status: "Failed",
       message: "Category ID is missing",
@@ -54,62 +37,35 @@ router.post("/add-service", async (req, res) => {
       status: "Failed",
       message: "Please input your rate",
     });
-  } else if (!providerFirstName) {
-    res.json({
-      status: "Failed",
-      message: "Service provider first name is missing",
-    });
-  } else if (!providerLastName) {
-    res.json({
-      status: "Failed",
-      message: "Service provider last name is missing",
-    });
-  } else if (!providerPhoneNumber) {
-    res.json({
-      status: "Failed",
-      message: "Service provider phone number is missing",
-    });
-  } else if (!providerEmail) {
-    res.json({
-      status: "Failed",
-      message: "Service provider email is missing",
-    });
-  } else if (!providerUserID) {
+  } else if (!provider) {
     res.json({
       status: "Failed",
       message: "Service provider user ID is missing",
     });
-  } else if (!providerLocation) {
-    res.json({
-      status: "Failed",
-      message: "Service provider location is missing",
-    });
   } else {
     //check if user exists
-    await User.find({ _id: providerUserID })
+    await User.find({ _id: provider })
       .then(async (response) => {
         if (response.length > 0) {
           //User is found
           //Check if Id is valid
-          if (serviceCategoryID.match(/^[0-9a-fA-F]{24}$/)) {
+          if (category.match(/^[0-9a-fA-F]{24}$/)) {
             //Check if category exists
-            await Category.findById(serviceCategoryID)
+            await Category.findById(category)
               .then(async (response) => {
                 if (response) {
                   //category exists
                   //Check if Id is valid
-                  if (serviceID.match(/^[0-9a-fA-F]{24}$/)) {
+                  if (service.match(/^[0-9a-fA-F]{24}$/)) {
                     //check if service exists
 
-                    await Service.findById(serviceID).then(async (response) => {
+                    await Service.findById(service).then(async (response) => {
                       if (response) {
                         //save to db
 
                         const newServiceProvider = ServiceProvider({
-                          serviceName,
-                          serviceID,
-                          serviceCategoryName,
-                          serviceCategoryID,
+                          service,
+                          category,
                           description,
                           image1,
                           image2,
@@ -118,12 +74,7 @@ router.post("/add-service", async (req, res) => {
                           rating: 0,
                           isPromoted: false,
                           datePromoted: "",
-                          providerFirstName,
-                          providerLastName,
-                          providerPhoneNumber,
-                          providerEmail,
-                          providerUserID,
-                          providerLocation,
+                          provider,
                           savedBy: [],
                           serviceViewedBy: [],
                         });
@@ -200,15 +151,18 @@ router.post("/add-service", async (req, res) => {
 });
 
 router.get("/get-all-service-providers", async (req, res) => {
-  const serviceProviders = await ServiceProvider.find({});
+  const serviceProviders = await ServiceProvider.find({})
+    .populate("service")
+    .populate("category")
+    .populate("provider");
 
-  const serviceProviderCount = await ServiceProvider.countDocuments();
+  // const serviceProviderCount = await ServiceProvider.countDocuments();
 
   res.json({
     serviceProviders: serviceProviders.map((serviceProviders) => ({
       rate: serviceProviders.rate,
-      serviceID: serviceProviders.serviceID,
-      serviceCategoryID: serviceProviders.serviceCategoryID,
+      service: serviceProviders.service,
+      category: serviceProviders.category,
       description: serviceProviders.description,
       image1: serviceProviders.image1,
       image2: serviceProviders.image2,
@@ -216,16 +170,9 @@ router.get("/get-all-service-providers", async (req, res) => {
       rating: serviceProviders.rating,
       isPromoted: serviceProviders.isPromoted,
       datePromoted: serviceProviders.datePromoted,
-      providerUserID: serviceProviders.providerUserID,
+      provider: serviceProviders.provider,
       savedBy: serviceProviders.savedBy,
       serviceViewedBy: serviceProviders.serviceViewedBy,
-      serviceName: serviceProviders.serviceName,
-      serviceCategoryName: serviceProviders.serviceCategoryName,
-      providerFirstName: serviceProviders.providerFirstName,
-      providerLastName: serviceProviders.providerLastName,
-      providerPhoneNumber: serviceProviders.providerPhoneNumber,
-      providerEmail: serviceProviders.providerEmail,
-      providerLocation: serviceProviders.providerLocation,
     })),
     // serviceProviderCount,
   });
