@@ -26,6 +26,14 @@ const ServiceProviderSchema = new Schema({
 
   savedBy: [String],
   serviceViewedBy: [String],
+
+  serviceName: String,
+  serviceCategoryName: String,
+  providerFirstName: String,
+  providerLastName: String,
+  providerPhoneNumber: Number,
+  providerEmail: String,
+  providerLocation: String,
 });
 
 exports.ServiceProvider = mongoose.model(
