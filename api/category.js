@@ -18,10 +18,11 @@ router.post("/add-category", async (req, res) => {
 
     await newCategory
       .save()
-      .then(() => {
+      .then((response) => {
         res.json({
           status: "Success",
           message: "Category added successfully",
+          data: response,
         });
       })
       .catch((err) => {

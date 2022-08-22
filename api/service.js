@@ -25,7 +25,6 @@ router.post("/post-service", async (req, res) => {
       // Yes, it's a valid ObjectId, proceed with `findById` call.
       await Category.findById(categoryID)
         .then(async (response) => {
-          console.log(response);
           if (response) {
             //category is present
             //Add service to db
