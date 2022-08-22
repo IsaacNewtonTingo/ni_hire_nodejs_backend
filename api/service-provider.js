@@ -294,4 +294,75 @@ router.post("/add-viewed-by", async (req, res) => {
       });
   }
 });
+
+//Add to saved by
+router.post("/add-saved-by", async (req, res) => {
+  const { serviceProviderID, userID } = req.body;
+  if (!serviceProviderID) {
+    res.json({
+      status: "Failed",
+      message: "Service provider ID is missing",
+    });
+  } else if (!userID) {
+    res.json({
+      status: "Failed",
+      message: "User ID is missing",
+    });
+  } else {
+    //check if user id is valid
+    await User.findOne({ _id: userID })
+      .then(async (response) => {
+        if (response) {
+          //check if service provider exists
+          await ServiceProvider.findOne({ _id: serviceProviderID })
+            .then(async (response) => {
+              if (response) {
+                await ServiceProvider.updateOne(
+                  { _id: serviceProviderID },
+                  { $set: { savedBy: userID } }
+                )
+                  .then(() => {
+                    res.json({
+                      status: "Success",
+                      message: "Successfully added to saved by",
+                    });
+                  })
+                  .catch((err) => {
+                    console.log(err);
+                    res.json({
+                      status: "Failed",
+                      message: "Error occured while adding to viewed by",
+                    });
+                  });
+              } else {
+                res.json({
+                  status: "Failed",
+                  message: "Service provider not found",
+                });
+              }
+            })
+            .catch((err) => {
+              console.log(err);
+              res.json({
+                status: "Failed",
+                message: "Error occured while checking service provider",
+              });
+            });
+        } else {
+          res.json({
+            status: "Failed",
+            message: "User not found",
+          });
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        res.json({
+          status: "Failed",
+          message: "Error occured while checking user data",
+        });
+      });
+  }
+});
+
 module.exports = router;
