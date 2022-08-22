@@ -508,4 +508,30 @@ router.get("/recently-viewed", async (req, res) => {
     });
 });
 
+//get saved
+router.get("/saved", async (req, res) => {
+  const { userID } = req.body;
+
+  await MySavedServiceProvider.find({ user: userID })
+
+    .populate({
+      path: "provider",
+      populate: { path: "service", select: "serviceName" },
+    })
+    .populate({ path: "provider", populate: { path: "provider" } })
+
+    .limit(4)
+    .then((response) => {
+      res.send(response);
+    })
+
+    .catch((err) => {
+      console.log(err);
+      res.json({
+        status: "Failed",
+        message: "Error occured while getting service provider data",
+      });
+    });
+});
+
 module.exports = router;
