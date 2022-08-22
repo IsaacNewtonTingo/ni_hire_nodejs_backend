@@ -553,4 +553,10 @@ router.post("/update-phone-number", (req, res) => {
   }
 });
 
+//get featured users
+router.get("/featured-users", async (req, res) => {
+  const services = await User.find({ isFeatured: true });
+  res.send(services);
+});
+
 module.exports = router;

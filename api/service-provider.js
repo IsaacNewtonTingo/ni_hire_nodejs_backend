@@ -72,13 +72,9 @@ router.post("/add-service", async (req, res) => {
                   await Service.updateOne(
                     { _id: service },
                     { $push: { serviceProviders: provider } }
-                  )
-                    .then((response) => {
-                      console.log(response);
-                    })
-                    .catch((err) => {
-                      console.log(err);
-                    });
+                  ).catch((err) => {
+                    console.log(err);
+                  });
                 } else {
                   res.json({
                     status: "Failed",

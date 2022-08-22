@@ -116,4 +116,12 @@ router.get("/get-services/:id", async (req, res) => {
   }
 });
 
+//get popular services
+router.get("/popular-services", async (req, res) => {
+  const services = await Service.find({})
+    .sort({ serviceProviders: -1 })
+    .limit(4);
+  res.send(services);
+});
+
 module.exports = router;
