@@ -1,4 +1,6 @@
+const { response } = require("express");
 const express = require("express");
+const { MyViewedServiceProvider } = require("../models/my-viewed-providers");
 const { Service } = require("../models/service");
 const { ServiceProvider } = require("../models/service-provider");
 const User = require("../models/user");
@@ -247,21 +249,80 @@ router.post("/add-viewed-by", async (req, res) => {
           await ServiceProvider.findOne({ _id: serviceProviderID })
             .then(async (response) => {
               if (response) {
-                await ServiceProvider.updateOne(
-                  { _id: serviceProviderID },
-                  { $set: { serviceViewedBy: userID } }
-                )
-                  .then(() => {
-                    res.json({
-                      status: "Success",
-                      message: "Successfully added to viewed by",
-                    });
+                //check if they already viewed
+                await MyViewedServiceProvider.find({
+                  $and: [{ user: userID }, { provider: serviceProviderID }],
+                })
+                  .then(async (response) => {
+                    const newMyViewedServiceProvider =
+                      new MyViewedServiceProvider({
+                        user: userID,
+                        provider: serviceProviderID,
+                        dateViewed: Date.now() + 10800000,
+                      });
+
+                    if (response.length > 0) {
+                      //already viewed
+                      await MyViewedServiceProvider.deleteOne({
+                        $and: [
+                          { user: userID },
+                          { provider: serviceProviderID },
+                        ],
+                      })
+                        .then(async () => {
+                          await newMyViewedServiceProvider
+                            .save()
+                            .then(() => {
+                              res.json({
+                                status: "Success",
+                                message:
+                                  "Successfully added to my viewed service provider",
+                              });
+                            })
+                            .catch((err) => {
+                              console.log(err);
+                              res.json({
+                                status: "Failed",
+                                message:
+                                  "Error occured while saving my viewed service provider",
+                              });
+                            });
+                        })
+                        .catch((err) => {
+                          console.log(err);
+                          res.json({
+                            status: "Failed",
+                            message:
+                              "Error occured while deleting existing my viewed service provider",
+                          });
+                        });
+                    } else {
+                      //not viewed
+                      await newMyViewedServiceProvider
+                        .save()
+                        .then(() => {
+                          res.json({
+                            status: "Success",
+                            message:
+                              "Successfully added to my viewed service provider",
+                          });
+                        })
+                        .catch((err) => {
+                          console.log(err);
+                          res.json({
+                            status: "Failed",
+                            message:
+                              "Error occured while saving my viewed service provider",
+                          });
+                        });
+                    }
                   })
                   .catch((err) => {
                     console.log(err);
                     res.json({
                       status: "Failed",
-                      message: "Error occured while adding to viewed by",
+                      message:
+                        "Error occured while checking existing views records",
                     });
                   });
               } else {
@@ -319,7 +380,7 @@ router.post("/add-saved-by", async (req, res) => {
               if (response) {
                 await ServiceProvider.updateOne(
                   { _id: serviceProviderID },
-                  { $set: { savedBy: userID } }
+                  { $push: { savedBy: userID } }
                 )
                   .then(() => {
                     res.json({
@@ -363,6 +424,23 @@ router.post("/add-saved-by", async (req, res) => {
         });
       });
   }
+});
+
+//Get recently viewed
+router.get("/recently-viewed", async (req, res) => {
+  const { userID } = req.body;
+
+  await ServiceProvider.find({ serviceViewedBy: userID })
+    .then((response) => {
+      res.send(response);
+    })
+    .catch((err) => {
+      console.log(err);
+      res.json({
+        status: "Failed",
+        message: "Error occured while getting service provider data",
+      });
+    });
 });
 
 module.exports = router;
