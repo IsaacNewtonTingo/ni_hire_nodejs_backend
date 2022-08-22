@@ -68,6 +68,17 @@ router.post("/add-service", async (req, res) => {
                         message: "Error occured while posting service",
                       });
                     });
+
+                  await Service.updateOne(
+                    { _id: service },
+                    { $push: { serviceProviders: provider } }
+                  )
+                    .then((response) => {
+                      console.log(response);
+                    })
+                    .catch((err) => {
+                      console.log(err);
+                    });
                 } else {
                   res.json({
                     status: "Failed",
@@ -198,6 +209,24 @@ router.get("/category/get-all-service-providers/:id", async (req, res) => {
       message: "Invalid categoy ID",
     });
   }
+});
+
+//Get featured service providers
+router.get("/get-featured", async (req, res) => {
+  await ServiceProvider.find({ isPromoted: true })
+    .populate("service")
+    .populate("category")
+    .populate("provider")
+    .then((response) => {
+      res.send(response);
+    })
+    .catch((err) => {
+      console.log(err);
+      res.json({
+        status: "Failed",
+        message: "Error occured while getting featured service provider",
+      });
+    });
 });
 
 module.exports = router;

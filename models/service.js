@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 
 const ServiceSchema = new Schema({
   serviceName: String,
-  categoryID: {
+  category: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Category",
   },
