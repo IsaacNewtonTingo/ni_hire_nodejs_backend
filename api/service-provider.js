@@ -1,5 +1,6 @@
 const { response } = require("express");
 const express = require("express");
+const { MySavedServiceProvider } = require("../models/my-saved-provider");
 const { MyViewedServiceProvider } = require("../models/my-viewed-providers");
 const { Service } = require("../models/service");
 const { ServiceProvider } = require("../models/service-provider");
@@ -357,7 +358,7 @@ router.post("/add-viewed-by", async (req, res) => {
 });
 
 //Add to saved by
-router.post("/add-saved-by", async (req, res) => {
+router.post("/save-post", async (req, res) => {
   const { serviceProviderID, userID } = req.body;
   if (!serviceProviderID) {
     res.json({
@@ -378,21 +379,76 @@ router.post("/add-saved-by", async (req, res) => {
           await ServiceProvider.findOne({ _id: serviceProviderID })
             .then(async (response) => {
               if (response) {
-                await ServiceProvider.updateOne(
-                  { _id: serviceProviderID },
-                  { $push: { savedBy: userID } }
-                )
-                  .then(() => {
-                    res.json({
-                      status: "Success",
-                      message: "Successfully added to saved by",
-                    });
+                //check if they already saved
+                await MySavedServiceProvider.find({
+                  $and: [{ user: userID }, { provider: serviceProviderID }],
+                })
+                  .then(async (response) => {
+                    const newMySavedServiceProvider =
+                      new MySavedServiceProvider({
+                        user: userID,
+                        provider: serviceProviderID,
+                        dateSaved: Date.now() + 10800000,
+                      });
+
+                    if (response.length > 0) {
+                      //already saved
+                      await MySavedServiceProvider.deleteOne({
+                        $and: [
+                          { user: userID },
+                          { provider: serviceProviderID },
+                        ],
+                      })
+                        .then(async () => {
+                          await newMySavedServiceProvider
+                            .save()
+                            .then(() => {
+                              res.json({
+                                status: "Success",
+                                message: "Successfully saved",
+                              });
+                            })
+                            .catch((err) => {
+                              console.log(err);
+                              res.json({
+                                status: "Failed",
+                                message: "Error occured while saving",
+                              });
+                            });
+                        })
+                        .catch((err) => {
+                          console.log(err);
+                          res.json({
+                            status: "Failed",
+                            message:
+                              "Error occured while deleting existing my viewed service provider",
+                          });
+                        });
+                    } else {
+                      //not saved
+                      await newMySavedServiceProvider
+                        .save()
+                        .then(() => {
+                          res.json({
+                            status: "Success",
+                            message: "Successfully saved",
+                          });
+                        })
+                        .catch((err) => {
+                          console.log(err);
+                          res.json({
+                            status: "Failed",
+                            message: "Error occured while saving",
+                          });
+                        });
+                    }
                   })
                   .catch((err) => {
                     console.log(err);
                     res.json({
                       status: "Failed",
-                      message: "Error occured while adding to viewed by",
+                      message:
+                        "Error occured while checking existing saved records",
                     });
                   });
               } else {
