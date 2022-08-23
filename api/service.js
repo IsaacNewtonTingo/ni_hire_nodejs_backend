@@ -75,7 +75,6 @@ router.post("/post-service", async (req, res) => {
 });
 
 //get all services
-
 router.get("/get-all-services", async (req, res) => {
   const services = await Service.find({});
 
@@ -122,6 +121,37 @@ router.get("/popular-services", async (req, res) => {
     .sort({ serviceProviders: -1 })
     .limit(4);
   res.send(services);
+});
+
+//search a service
+router.get("/search", async (req, res) => {
+  const { serviceName } = req.query;
+
+  if (!serviceName.trim()) {
+    res.json({
+      status: "Failed",
+      message: "Please input a service to search",
+    });
+  } else {
+    await Service.find({ serviceName: { $regex: serviceName, $options: "i" } })
+      .then((response) => {
+        if (response.length > 0) {
+          res.send(response);
+        } else {
+          res.json({
+            status: "Failed",
+            message: "No data found",
+          });
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        res.json({
+          status: "Failed",
+          message: "Error occured while searching service",
+        });
+      });
+  }
 });
 
 module.exports = router;
