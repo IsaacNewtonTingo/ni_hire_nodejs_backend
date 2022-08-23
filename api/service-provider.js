@@ -1,11 +1,11 @@
-const { response } = require("express");
 const express = require("express");
+const router = express.Router();
+
+const User = require("../models/user");
 const { MySavedServiceProvider } = require("../models/my-saved-provider");
 const { MyViewedServiceProvider } = require("../models/my-viewed-providers");
 const { Service } = require("../models/service");
 const { ServiceProvider } = require("../models/service-provider");
-const User = require("../models/user");
-const router = express.Router();
 
 router.post("/add-service", async (req, res) => {
   const { service, description, image1, image2, image3, rate, provider } =
