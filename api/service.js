@@ -124,7 +124,7 @@ router.get("/popular-services", async (req, res) => {
 });
 
 //search a service
-router.get("/search", async (req, res) => {
+router.get("/search-service", async (req, res) => {
   const { serviceName } = req.query;
 
   if (!serviceName.trim()) {
@@ -151,6 +151,43 @@ router.get("/search", async (req, res) => {
           message: "Error occured while searching service",
         });
       });
+  }
+});
+
+router.get("/filter-search", async (req, res) => {
+  const { serviceName, location } = req.query;
+
+  if (!serviceName.trim()) {
+    res.json({
+      status: "Failed",
+      message: "Please input a service to search",
+    });
+  } else {
+    const servers = await ServiceProvider.find({})
+      .populate("service")
+      .populate("provider")
+      .catch((err) => {
+        console.log(err);
+        res.json({
+          status: "Failed",
+          message: "Error occured while searching service",
+        });
+      });
+
+    let filteredServiceProviders = servers.filter(function (servers) {
+      if (
+        servers.service.serviceName == serviceName &&
+        servers.provider.location == location
+      ) {
+        return true;
+      }
+    });
+
+    res.send(filteredServiceProviders);
+
+    // res.send(
+    //   servers.filter((servers) => servers.service.serviceName == serviceName)
+    // );
   }
 });
 
