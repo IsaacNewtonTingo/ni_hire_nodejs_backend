@@ -534,4 +534,123 @@ router.get("/saved", async (req, res) => {
     });
 });
 
+//search service providers
+router.get("/search-service-provider", async (req, res) => {
+  const {
+    serviceName,
+    location,
+    lowToHighRate,
+    highToLowRate,
+    lowToHighRating,
+    highToLowRating,
+    lowToHighReviews,
+    highToLowReviews,
+  } = req.query;
+  const newLocation = "Kenya";
+
+  if (
+    serviceName &&
+    !location &&
+    !lowToHighRate &&
+    !highToLowRate &&
+    !lowToHighRating &&
+    !highToLowRating &&
+    !lowToHighReviews &&
+    !highToLowReviews
+  ) {
+    const servers = await ServiceProvider.find({})
+      .populate("service")
+      .populate("provider")
+      .catch((err) => {
+        console.log(err);
+        res.json({
+          status: "Failed",
+          message: "Error occured while searching service",
+        });
+      });
+
+    let filteredServiceProviders = servers.filter(function (servers) {
+      if (
+        servers.service.serviceName == serviceName &&
+        servers.provider.location.includes(newLocation)
+      ) {
+        return true;
+      }
+    });
+
+    res.send(filteredServiceProviders);
+  } else if (
+    serviceName &&
+    location &&
+    !lowToHighRate &&
+    !highToLowRate &&
+    !lowToHighRating &&
+    !highToLowRating &&
+    !lowToHighReviews &&
+    !highToLowReviews
+  ) {
+    const servers = await ServiceProvider.find({})
+      .populate("service")
+      .populate("provider")
+      .catch((err) => {
+        console.log(err);
+        res.json({
+          status: "Failed",
+          message: "Error occured while searching service",
+        });
+      });
+
+    let filteredServiceProviders = servers.filter(function (servers) {
+      if (
+        servers.service.serviceName == serviceName &&
+        servers.provider.location.trim() == location.trim()
+      ) {
+        return true;
+      }
+    });
+
+    res.send(filteredServiceProviders);
+  } else if (
+    !serviceName &&
+    location &&
+    !lowToHighRate &&
+    !highToLowRate &&
+    !lowToHighRating &&
+    !highToLowRating &&
+    !lowToHighReviews &&
+    !highToLowReviews
+  ) {
+    const servers = await ServiceProvider.find({})
+      .populate("service")
+      .populate("provider")
+      .catch((err) => {
+        console.log(err);
+        res.json({
+          status: "Failed",
+          message: "Error occured while searching service",
+        });
+      });
+
+    let filteredServiceProviders = servers.filter(function (servers) {
+      if (servers.provider.location.trim() == location.trim()) {
+        return true;
+      }
+    });
+
+    res.send(filteredServiceProviders);
+  } else {
+    const servers = await ServiceProvider.find({})
+      .populate("service")
+      .populate("provider")
+      .catch((err) => {
+        console.log(err);
+        res.json({
+          status: "Failed",
+          message: "Error occured while searching service",
+        });
+      });
+    res.send(servers);
+  }
+});
+
 module.exports = router;
