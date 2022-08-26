@@ -536,29 +536,12 @@ router.get("/saved", async (req, res) => {
 
 //search service providers
 router.get("/search-service-provider", async (req, res) => {
-  const {
-    serviceName,
-    location,
-    lowToHighRate,
-    highToLowRate,
-    lowToHighRating,
-    highToLowRating,
-    lowToHighReviews,
-    highToLowReviews,
-  } = req.query;
+  const { serviceName, location, sort } = req.query;
   const newLocation = "Kenya";
 
-  if (
-    serviceName &&
-    !location &&
-    !lowToHighRate &&
-    !highToLowRate &&
-    !lowToHighRating &&
-    !highToLowRating &&
-    !lowToHighReviews &&
-    !highToLowReviews
-  ) {
+  if (serviceName && !location) {
     const servers = await ServiceProvider.find({})
+      .sort(sort)
       .populate("service")
       .populate("provider")
       .catch((err) => {
@@ -579,17 +562,9 @@ router.get("/search-service-provider", async (req, res) => {
     });
 
     res.send(filteredServiceProviders);
-  } else if (
-    serviceName &&
-    location &&
-    !lowToHighRate &&
-    !highToLowRate &&
-    !lowToHighRating &&
-    !highToLowRating &&
-    !lowToHighReviews &&
-    !highToLowReviews
-  ) {
+  } else if (serviceName && location) {
     const servers = await ServiceProvider.find({})
+      .sort(sort)
       .populate("service")
       .populate("provider")
       .catch((err) => {
@@ -610,17 +585,9 @@ router.get("/search-service-provider", async (req, res) => {
     });
 
     res.send(filteredServiceProviders);
-  } else if (
-    !serviceName &&
-    location &&
-    !lowToHighRate &&
-    !highToLowRate &&
-    !lowToHighRating &&
-    !highToLowRating &&
-    !lowToHighReviews &&
-    !highToLowReviews
-  ) {
+  } else if (!serviceName && location) {
     const servers = await ServiceProvider.find({})
+      .sort(sort)
       .populate("service")
       .populate("provider")
       .catch((err) => {
@@ -640,6 +607,7 @@ router.get("/search-service-provider", async (req, res) => {
     res.send(filteredServiceProviders);
   } else {
     const servers = await ServiceProvider.find({})
+      .sort(sort)
       .populate("service")
       .populate("provider")
       .catch((err) => {
