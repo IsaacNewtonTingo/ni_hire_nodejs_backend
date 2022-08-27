@@ -560,4 +560,29 @@ router.get("/featured-users", async (req, res) => {
   res.send(services);
 });
 
+//get user data
+router.get("/get-user-data/:id", async (req, res) => {
+  const userID = req.params.id;
+  if (userID.match(/^[0-9a-fA-F]{24}$/)) {
+    await User.findById(userID)
+      .then((response) => {
+        res.json({
+          data: response,
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+        res.json({
+          status: "Failed",
+          message: "Error occured while getting user data",
+        });
+      });
+  } else {
+    res.json({
+      status: "Failed",
+      message: "Invalid user ID",
+    });
+  }
+});
+
 module.exports = router;
