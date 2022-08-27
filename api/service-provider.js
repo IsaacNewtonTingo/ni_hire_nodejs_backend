@@ -758,4 +758,53 @@ router.post("/add-review/:id", async (req, res) => {
   }
 });
 
+//delete review
+router.delete("/delete-review/:id", async (req, res) => {
+  const reviewID = req.params.id;
+  const { userID } = req.query;
+
+  //Check if user exists
+  await User.findOne({ _id: userID })
+    .then(async (response) => {
+      if (response) {
+        //check if review exists
+        await Review.findOneAndDelete({
+          $and: [{ _id: reviewID }, { whoReviewed: userID }],
+        })
+          .then((response) => {
+            if (response != null) {
+              res.json({
+                status: "Success",
+                message: "Review deleted sucessfully",
+              });
+            } else {
+              res.json({
+                status: "Success",
+                message: "Review not found. Might have been deleted",
+              });
+            }
+          })
+          .catch((err) => {
+            console.log(err);
+            res.json({
+              status: "Failed",
+              message: "Error occured while deleting review",
+            });
+          });
+      } else {
+        res.json({
+          status: "Failed",
+          message: "User not found",
+        });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      res.json({
+        status: "Failed",
+        message: "Error occured while finding user",
+      });
+    });
+});
+
 module.exports = router;
