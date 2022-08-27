@@ -118,8 +118,7 @@ router.post("/add-service", async (req, res) => {
 //Get all service providers
 router.get("/get-all-service-providers", async (req, res) => {
   const serviceProviders = await ServiceProvider.find({})
-    .populate("service")
-    .populate("category")
+    .populate({ path: "service", populate: { path: "category" } })
     .populate("provider");
 
   // const serviceProviderCount = await ServiceProvider.countDocuments();
@@ -151,8 +150,7 @@ router.get("/get-one-service-provider/:id", async (req, res) => {
   if (serviceProviderID.match(/^[0-9a-fA-F]{24}$/)) {
     //valid ID
     const serviceProvider = await ServiceProvider.findById(serviceProviderID)
-      .populate("service")
-      .populate("category")
+      .populate({ path: "service", populate: { path: "category" } })
       .populate("provider")
       .catch((err) => {
         console.log(err);
@@ -183,8 +181,7 @@ router.get("/category/get-all-service-providers/:id", async (req, res) => {
     const serviceProviders = await ServiceProvider.find({
       category: categoryID,
     })
-      .populate("service")
-      .populate("category")
+      .populate({ path: "service", populate: { path: "category" } })
       .populate("provider")
       .catch((err) => {
         console.log(err);
@@ -213,8 +210,7 @@ router.get("/category/get-all-service-providers/:id", async (req, res) => {
 //Get featured service providers
 router.get("/get-featured", async (req, res) => {
   await ServiceProvider.find({ isPromoted: true })
-    .populate("service")
-    .populate("category")
+    .populate({ path: "service", populate: { path: "category" } })
     .populate("provider")
     .then((response) => {
       res.send(response);
@@ -542,7 +538,7 @@ router.get("/search-service-provider", async (req, res) => {
   if (serviceName && !location) {
     const servers = await ServiceProvider.find({})
       .sort(sort)
-      .populate("service")
+      .populate({ path: "service", populate: { path: "category" } })
       .populate("provider")
       .catch((err) => {
         console.log(err);
@@ -565,7 +561,7 @@ router.get("/search-service-provider", async (req, res) => {
   } else if (serviceName && location) {
     const servers = await ServiceProvider.find({})
       .sort(sort)
-      .populate("service")
+      .populate({ path: "service", populate: { path: "category" } })
       .populate("provider")
       .catch((err) => {
         console.log(err);
@@ -588,7 +584,7 @@ router.get("/search-service-provider", async (req, res) => {
   } else if (!serviceName && location) {
     const servers = await ServiceProvider.find({})
       .sort(sort)
-      .populate("service")
+      .populate({ path: "service", populate: { path: "category" } })
       .populate("provider")
       .catch((err) => {
         console.log(err);
@@ -608,7 +604,7 @@ router.get("/search-service-provider", async (req, res) => {
   } else {
     const servers = await ServiceProvider.find({})
       .sort(sort)
-      .populate("service")
+      .populate({ path: "service", populate: { path: "category" } })
       .populate("provider")
       .catch((err) => {
         console.log(err);
@@ -619,6 +615,34 @@ router.get("/search-service-provider", async (req, res) => {
       });
     res.send(servers);
   }
+});
+
+//get user services
+router.get("/get-my-services/:id", async (req, res) => {
+  const userID = req.params.id;
+  await ServiceProvider.find({ provider: userID })
+    .populate({ path: "service", populate: { path: "category" } })
+    .populate("provider")
+    .then((response) => {
+      if (response.length > 0) {
+        res.json({
+          status: "Success",
+          data: response,
+        });
+      } else {
+        res.json({
+          status: "Failed",
+          message: "User has no services",
+        });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      res.json({
+        status: "Failed",
+        message: "Error occured while getting user services",
+      });
+    });
 });
 
 module.exports = router;
