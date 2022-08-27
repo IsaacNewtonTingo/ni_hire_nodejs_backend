@@ -6,6 +6,7 @@ const { MySavedServiceProvider } = require("../models/my-saved-provider");
 const { MyViewedServiceProvider } = require("../models/my-viewed-providers");
 const { Service } = require("../models/service");
 const { ServiceProvider } = require("../models/service-provider");
+const { Review } = require("../models/review");
 
 router.post("/add-service", async (req, res) => {
   const { service, description, image1, image2, image3, rate, provider } =
@@ -643,6 +644,118 @@ router.get("/get-my-services/:id", async (req, res) => {
         message: "Error occured while getting user services",
       });
     });
+});
+
+//add review
+router.post("/add-review/:id", async (req, res) => {
+  const { userID, serviceProviderID, reviewMessage, rating } = req.body;
+  const serviceID = req.params.id;
+
+  //check if user wants to rate themselves
+  if (userID == serviceProviderID) {
+    res.json({
+      status: "Failed",
+      message: "You cannot review yourself",
+    });
+  } else {
+    //check if user exists
+    await User.findOne({ _id: userID })
+      .then(async (response) => {
+        if (response) {
+          //check if job provider exists
+          await ServiceProvider.findOne({
+            $and: [{ provider: serviceProviderID }, { _id: serviceID }],
+          })
+            .then(async (response) => {
+              if (response) {
+                const newReview = new Review({
+                  whoReviewed: userID,
+                  serviceProvider: serviceProviderID,
+                  createdAt: Date.now(),
+                  reviewMessage,
+                  rating,
+                });
+
+                await newReview
+                  .save()
+                  .then(async () => {
+                    //get initial data
+
+                    await ServiceProvider.findOne({ _id: serviceID })
+                      .then(async (response) => {
+                        if (response) {
+                          //find average
+                          const oldRating = response.rating;
+                          const newRating = (oldRating + rating) / 2;
+
+                          //update
+                          await ServiceProvider.updateOne(
+                            { _id: serviceID },
+                            { rating: newRating.toFixed(1) }
+                          )
+                            .then(() => {
+                              res.json({
+                                status: "Success",
+                                message: "Review added successfully",
+                              });
+                            })
+                            .catch((err) => {
+                              console.log(err);
+                              res.json({
+                                status: "Failed",
+                                message: "Error occured while updating rating",
+                              });
+                            });
+                        } else {
+                          res.json({
+                            status: "Failed",
+                            message: "Servie not found",
+                          });
+                        }
+                      })
+                      .catch((err) => {
+                        console.log(err);
+                        res.json({
+                          status: "Failed",
+                          message: "Error occured while getting service",
+                        });
+                      });
+                  })
+                  .catch((err) => {
+                    res.json({
+                      status: "Failed",
+                      message: "Error occured while saving review",
+                    });
+                  });
+              } else {
+                res.json({
+                  status: "Failed",
+                  message: "Service provider not found",
+                });
+              }
+            })
+            .catch((err) => {
+              console.log(err);
+              res.json({
+                status: "Failed",
+                message: "Error occured while finding service provider",
+              });
+            });
+        } else {
+          res.json({
+            status: "Failed",
+            message: "User not found",
+          });
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        res.json({
+          status: "Failed",
+          message: "Error occured while finding user",
+        });
+      });
+  }
 });
 
 module.exports = router;
