@@ -305,30 +305,37 @@ router.post("/signin", (req, res) => {
 router.post("/request-password-reset", (req, res) => {
   const { email, redirectUrl } = req.body;
 
-  User.find({ email })
-    .then((data) => {
-      if (data.length) {
-        if (!data[0].verified) {
+  if (!email) {
+    res.json({
+      status: "Failed",
+      message: "Please input email",
+    });
+  } else {
+    User.find({ email })
+      .then((data) => {
+        if (data.length) {
+          if (!data[0].verified) {
+            res.json({
+              status: "Failed",
+              message: "Email hasn't been verified yet. Check your email",
+            });
+          } else {
+            sendResetEmail(data[0], redirectUrl, res);
+          }
+        } else {
           res.json({
             status: "Failed",
-            message: "Email hasn't been verified yet. Check your email",
+            message: "No account with the given email exists",
           });
-        } else {
-          sendResetEmail(data[0], redirectUrl, res);
         }
-      } else {
+      })
+      .catch((err) => {
         res.json({
           status: "Failed",
-          message: "No account with the given email exists",
+          message: "Error occured whie checking existing user",
         });
-      }
-    })
-    .catch((err) => {
-      res.json({
-        status: "Failed",
-        message: "Error occured whie checking existing user",
       });
-    });
+  }
 });
 
 const sendResetEmail = ({ _id, email }, redirectUrl, res) => {
@@ -582,6 +589,84 @@ router.get("/get-user-data/:id", async (req, res) => {
       status: "Failed",
       message: "Invalid user ID",
     });
+  }
+});
+
+//edit profile
+router.put("/update-profile/:id", async (req, res) => {
+  const userID = req.params.id;
+  const { password, email } = req.body;
+  const filter = { _id: userID };
+
+  //validate user
+  if (!email || !password) {
+    res.json({
+      status: "Failed",
+      message: "All fields are required",
+    });
+  } else {
+    User.find({ email })
+      .then((data) => {
+        if (data.length) {
+          const hashedPassword = data[0].password;
+          bcrypt
+            .compare(password, hashedPassword)
+            .then(async (result) => {
+              if (result) {
+                await User.findOneAndUpdate(
+                  filter,
+                  {
+                    firstName: req.body.firstName,
+                    lastName: req.body.lastName,
+                    profilePicture: req.body.profilePicture,
+                    bio: req.body.bio,
+                    location: req.body.location,
+                  },
+                  {
+                    new: true,
+                  }
+                )
+                  .then((response) => {
+                    res.json({
+                      status: "Success",
+                      message: "Profile updated successfully",
+                      data: response,
+                    });
+                  })
+                  .catch((err) => {
+                    console.log(err);
+                    res.json({
+                      status: "Failed",
+                      message: "Error occured while updating user",
+                    });
+                  });
+              } else {
+                res.json({
+                  status: "Failed",
+                  message: "Invalid password",
+                });
+              }
+            })
+            .catch((err) => {
+              console.log(err);
+              res.json({
+                status: "Failed",
+                message: "Error occured while comparing passwords",
+              });
+            });
+        } else {
+          res.json({
+            status: "Failed",
+            message: "Invalid credentials entered",
+          });
+        }
+      })
+      .catch((err) => {
+        res.json({
+          status: "Failed",
+          message: "Error occured checking existing user",
+        });
+      });
   }
 });
 
