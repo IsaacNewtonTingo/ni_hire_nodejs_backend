@@ -7,6 +7,18 @@ const { MyViewedServiceProvider } = require("../models/my-viewed-providers");
 const { Service } = require("../models/service");
 const { ServiceProvider } = require("../models/service-provider");
 const { Review } = require("../models/review");
+const { PromotedService } = require("../models/promoted-services");
+
+var nodemailer = require("nodemailer");
+const request = require("request");
+
+let transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.AUTH_EMAIL,
+    pass: process.env.AUTH_PASS,
+  },
+});
 
 router.post("/add-service", async (req, res) => {
   const { service, description, image1, image2, image3, rate, provider } =
@@ -896,5 +908,120 @@ router.delete("/delete-service-provider/:id", async (req, res) => {
       });
     });
 });
+
+//promote servie
+router.post("/promote-service/:id", async (req, res) => {
+  const { phoneNumber, userID } = req.body;
+  const serviceProviderID = req.params.id;
+  const amount = 1;
+
+  //check if service exists
+  await ServiceProvider.findOne({ _id: serviceProviderID })
+    .then((response) => {
+      if (response) {
+        //check if user id == provider id
+        if (response.provider != userID) {
+          res.json({
+            status: "Failed",
+            message: "Action not authorized",
+          });
+        } else {
+          //perform stk push
+          const url =
+            "https://tinypesa.com/api/v1/express/initialize?https://investment-app-backend.herokuapp.com/payments/registration-callback";
+          request(
+            {
+              url: url,
+              method: "POST",
+              headers: {
+                Apikey: process.env.TINY_PESA_API_KEY_REGISTRATION,
+                "Content-Type": "application/x-www-form-urlencoded",
+              },
+              body:
+                "amount=" +
+                amount +
+                "&msisdn=" +
+                phoneNumber +
+                "&account_no=200",
+            },
+            function (error, response, body) {
+              if (error) {
+                console.log(error);
+              } else {
+                res.json({
+                  status: "Success",
+                  message:
+                    "Your request is being processed.Wait for M-Pesa prompt on your phone.",
+                });
+              }
+            }
+          );
+        }
+      } else {
+        res.json({
+          status: "Failed",
+          message: "Servie not found",
+        });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      res.json({
+        status: "Failed",
+        message: "Error occured while getting service data",
+      });
+    });
+});
+
+router.post("/service-promotion-callback", (req, res) => {
+  console.log(req.body.Body);
+
+  //Payment is successful
+  if (req.body.Body.stkCallback.ResultCode == 0) {
+    //pass amount,phoneNumber to this function
+    const phoneNumber = req.body.Body.stkCallback.Msisdn;
+    const amount = req.body.Body.stkCallback.Amount;
+
+    savePaymentToDB({ phoneNumber, amount });
+  } else {
+    //Payment unsuccessfull
+    console.log("Request not completed/Cancelled");
+  }
+});
+
+//save service promotion data
+const savePaymentToDB = async ({ amount, phoneNumber }) => {
+  const newPromotedService = new PromotedService({
+    datePromoted: Date.now(),
+    expiryDate: Date.now() + 604800000,
+    amountPaid: amount,
+    phoneNumber: phoneNumber,
+  });
+
+  await newPromotedService
+    .save()
+    .then((response) => {
+      console.log(response);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+
+  const mailOptions = {
+    from: process.env.AUTH_EMAIL,
+    to: "newtontingo@gmail.com",
+    subject: "Service promotion payment alert",
+    html: `<p><strong>${phoneNumber}</strong> has paid <strong>KSH. ${amount}</strong> as registration fee in your investment mobile application</p>`,
+  };
+
+  await transporter
+    .sendMail(mailOptions)
+    .then((response) => {
+      console.log(response);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+};
 
 module.exports = router;
