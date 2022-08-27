@@ -779,7 +779,7 @@ router.delete("/delete-review/:id", async (req, res) => {
               });
             } else {
               res.json({
-                status: "Success",
+                status: "Failed",
                 message: "Review not found. Might have been deleted",
               });
             }
@@ -803,6 +803,96 @@ router.delete("/delete-review/:id", async (req, res) => {
       res.json({
         status: "Failed",
         message: "Error occured while finding user",
+      });
+    });
+});
+
+//edit service
+router.put("/edit-service-provider/:id", async (req, res) => {
+  const serviceProviderID = req.params.id;
+  const { userID, providerID } = req.body;
+  const filter = {
+    _id: serviceProviderID,
+  };
+
+  if (userID != providerID) {
+    res.json({
+      status: "Failed",
+      message: "Action not authorized",
+    });
+  } else {
+    //check if service provider id exists(_id)
+    await ServiceProvider.findOneAndUpdate(
+      filter,
+      {
+        description: req.body.description,
+        image1: req.body.image1,
+        image2: req.body.image2,
+        image3: req.body.image3,
+        rate: req.body.rate,
+      },
+      {
+        new: true,
+      }
+    )
+      .then((response) => {
+        res.json({
+          status: "Success",
+          message: "Service updated successfully",
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+        res.json({
+          status: "Failed",
+          message: "Error occured while updating service",
+        });
+      });
+  }
+});
+
+//delete service
+router.delete("/delete-service-provider/:id", async (req, res) => {
+  const serviceProviderID = req.params.id;
+  const { userID } = req.body;
+
+  await ServiceProvider.findOne({ _id: serviceProviderID })
+    .then(async (response) => {
+      if (response) {
+        if (response.provider != userID) {
+          res.json({
+            status: "Failed",
+            message: "Action not authorized",
+          });
+        } else {
+          await ServiceProvider.deleteOne({ _id: serviceProviderID })
+            .then(() => {
+              res.json({
+                status: "Success",
+                message: "Successfully deleted",
+              });
+            })
+
+            .catch((err) => {
+              console.log(err);
+              res.json({
+                status: "Failed",
+                message: "Error occured while getting service data",
+              });
+            });
+        }
+      } else {
+        res.json({
+          status: "Failed",
+          message: "Service not found",
+        });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      res.json({
+        status: "Failed",
+        message: "Error occured while getting service data",
       });
     });
 });
