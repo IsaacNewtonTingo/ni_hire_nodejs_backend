@@ -928,7 +928,7 @@ router.post("/promote-service/:id", async (req, res) => {
         } else {
           //perform stk push
           const url =
-            "https://tinypesa.com/api/v1/express/initialize?https://investment-app-backend.herokuapp.com/payments/registration-callback";
+            "https://tinypesa.com/api/v1/express/initialize?https://49af-41-80-98-150.ap.ngrok.io/app/service-provider/promote-service";
           request(
             {
               url: url,
@@ -974,8 +974,6 @@ router.post("/promote-service/:id", async (req, res) => {
 });
 
 router.post("/service-promotion-callback", (req, res) => {
-  console.log(req.body.Body);
-
   //Payment is successful
   if (req.body.Body.stkCallback.ResultCode == 0) {
     //pass amount,phoneNumber to this function
@@ -1000,9 +998,7 @@ const savePaymentToDB = async ({ amount, phoneNumber }) => {
 
   await newPromotedService
     .save()
-    .then((response) => {
-      console.log(response);
-    })
+    .then(() => {})
     .catch((err) => {
       console.log(err);
     });
@@ -1014,14 +1010,9 @@ const savePaymentToDB = async ({ amount, phoneNumber }) => {
     html: `<p><strong>${phoneNumber}</strong> has paid <strong>KSH. ${amount}</strong> as registration fee in your investment mobile application</p>`,
   };
 
-  await transporter
-    .sendMail(mailOptions)
-    .then((response) => {
-      console.log(response);
-    })
-    .catch((err) => {
-      console.log(err);
-    });
+  await transporter.sendMail(mailOptions).catch((err) => {
+    console.log(err);
+  });
 };
 
 module.exports = router;

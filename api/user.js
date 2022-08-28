@@ -5,10 +5,12 @@ const bcrypt = require("bcrypt");
 var nodemailer = require("nodemailer");
 const { v4: uuidv4 } = require("uuid");
 const path = require("path");
+const request = require("request");
 
 const User = require("../models/user");
 const UserVerification = require("../models/user-verification");
 const PasswordReset = require("../models/password-reset");
+const { PromotedUser } = require("../models/promote-user");
 
 const currentUrl = "https://ni-hire-backend.herokuapp.com/";
 
@@ -667,6 +669,103 @@ router.put("/update-profile/:id", async (req, res) => {
           message: "Error occured checking existing user",
         });
       });
+  }
+});
+
+//promote profile
+router.post("/promote-profile/:id", async (req, res) => {
+  const { phoneNumber } = req.body;
+  const userID = req.params.id;
+  const amount = 1;
+
+  //check if user with id and phonenumber exists
+  await User.findOne({
+    $and: [{ _id: userID }, { phoneNumber: phoneNumber }],
+  })
+    .then((response) => {
+      if (response) {
+        //perform stk push
+        const url =
+          "https://tinypesa.com/api/v1/express/initialize?https://49af-41-80-98-150.ap.ngrok.io/user/user-promotion-callback";
+        request(
+          {
+            url: url,
+            method: "POST",
+            headers: {
+              Apikey: process.env.TINY_PESA_API_KEY_DEPOSIT,
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body:
+              "amount=" + amount + "&msisdn=" + phoneNumber + "&account_no=200",
+          },
+          function (error, response, body) {
+            if (error) {
+              console.log(error);
+            } else {
+              res.json({
+                status: "Success",
+                message:
+                  "Your request is being processed.Wait for M-Pesa prompt on your phone.",
+              });
+            }
+          }
+        );
+      } else {
+        res.json({
+          status: "Failed",
+          message: "No user found. Check your phone number again",
+        });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      res.json({
+        status: "Failed",
+        message: "Error occured while getting user data",
+      });
+    });
+});
+
+router.post("/user-promotion-callback", async (req, res) => {
+  //Payment is successful
+  if (req.body.Body.stkCallback.ResultCode == 0) {
+    //pass amount,phoneNumber to this function
+    const phoneNumber = req.body.Body.stkCallback.Msisdn;
+    const amount = req.body.Body.stkCallback.Amount;
+
+    const newPromotedService = new PromotedUser({
+      datePromoted: Date.now(),
+      expiryDate: Date.now() + 604800000,
+      amountPaid: amount,
+      phoneNumber: phoneNumber,
+    });
+
+    await newPromotedService
+      .save()
+      .then(async () => {
+        await User.findOneAndUpdate({ phoneNumber }, { isFeatured: true })
+          .then(() => {})
+          .catch((err) => {
+            console.log(err);
+          });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+
+    const mailOptions = {
+      from: process.env.AUTH_EMAIL,
+      to: "newtontingo@gmail.com",
+      subject: "User promotion payment alert",
+      html: `<p><strong>${phoneNumber}</strong> has paid <strong>KSH. ${amount}</strong> as user promotion at niHire app</p>`,
+    };
+
+    await transporter.sendMail(mailOptions).catch((err) => {
+      console.log(err);
+    });
+  } else {
+    //Payment unsuccessfull
+    console.log("Request not completed/Cancelled");
   }
 });
 
