@@ -6,7 +6,7 @@ const ReviewSchema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
   },
-  serviceProvider: {
+  serviceReviewed: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "ServiceProvider",
   },

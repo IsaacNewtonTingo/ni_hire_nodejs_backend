@@ -727,9 +727,8 @@ router.post("/promote-profile/:id", async (req, res) => {
 });
 
 router.post("/user-promotion-callback", async (req, res) => {
-  //Payment is successful
   if (req.body.Body.stkCallback.ResultCode == 0) {
-    //pass amount,phoneNumber to this function
+    //Payment is successful
     const phoneNumber = req.body.Body.stkCallback.Msisdn;
     const amount = req.body.Body.stkCallback.Amount;
 

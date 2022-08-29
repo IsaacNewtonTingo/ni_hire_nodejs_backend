@@ -660,29 +660,23 @@ router.get("/get-my-services/:id", async (req, res) => {
 
 //add review
 router.post("/add-review/:id", async (req, res) => {
-  const { userID, serviceProviderID, reviewMessage, rating } = req.body;
-  const serviceID = req.params.id;
+  const { userID, reviewMessage, rating } = req.body;
+  const serviceProviderID = req.params.id;
 
-  //check if user wants to rate themselves
-  if (userID == serviceProviderID) {
-    res.json({
-      status: "Failed",
-      message: "You cannot review yourself",
-    });
-  } else {
-    //check if user exists
-    await User.findOne({ _id: userID })
-      .then(async (response) => {
-        if (response) {
-          //check if job provider exists
-          await ServiceProvider.findOne({
-            $and: [{ provider: serviceProviderID }, { _id: serviceID }],
-          })
-            .then(async (response) => {
-              if (response) {
+  //check if user exists
+  await User.findOne({ _id: userID })
+    .then(async (response) => {
+      if (response) {
+        //get the job first using jobID
+        await ServiceProvider.findOne({ _id: serviceProviderID })
+          .then(async (response) => {
+            if (response) {
+              //check if user wants to rate themselves
+              if (response.provider != userID) {
+                //you can add review
                 const newReview = new Review({
                   whoReviewed: userID,
-                  serviceProvider: serviceProviderID,
+                  serviceReviewed: serviceProviderID,
                   createdAt: Date.now(),
                   reviewMessage,
                   rating,
@@ -693,7 +687,7 @@ router.post("/add-review/:id", async (req, res) => {
                   .then(async () => {
                     //get initial data
 
-                    await ServiceProvider.findOne({ _id: serviceID })
+                    await ServiceProvider.findOne({ _id: serviceProviderID })
                       .then(async (response) => {
                         if (response) {
                           //find average
@@ -702,7 +696,7 @@ router.post("/add-review/:id", async (req, res) => {
 
                           //update
                           await ServiceProvider.updateOne(
-                            { _id: serviceID },
+                            { _id: serviceProviderID },
                             { rating: newRating.toFixed(1) }
                           )
                             .then(() => {
@@ -721,7 +715,7 @@ router.post("/add-review/:id", async (req, res) => {
                         } else {
                           res.json({
                             status: "Failed",
-                            message: "Servie not found",
+                            message: "Service not found",
                           });
                         }
                       })
@@ -742,32 +736,119 @@ router.post("/add-review/:id", async (req, res) => {
               } else {
                 res.json({
                   status: "Failed",
-                  message: "Service provider not found",
+                  message: "You cannot review yourself",
                 });
               }
-            })
-            .catch((err) => {
-              console.log(err);
+            } else {
               res.json({
                 status: "Failed",
-                message: "Error occured while finding service provider",
+                message: "Service not found",
               });
+            }
+          })
+          .catch((err) => {
+            console.log(err);
+            res.json({
+              status: "Failed",
+              message: "Error occured while getting job details",
             });
-        } else {
-          res.json({
-            status: "Failed",
-            message: "User not found",
           });
-        }
-      })
-      .catch((err) => {
-        console.log(err);
+      } else {
         res.json({
           status: "Failed",
-          message: "Error occured while finding user",
+          message: "User not found",
         });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      res.json({
+        status: "Failed",
+        message: "Error occured while getting user details",
       });
-  }
+    });
+});
+
+//get reviews for a service
+router.get("/get-reviews-for-a-service/:id", async (req, res) => {
+  const serviceProviderID = req.params.id;
+
+  //check if service is available
+  await ServiceProvider.findOne({ _id: serviceProviderID })
+    .then(async (response) => {
+      if (response) {
+        await Review.find({ serviceProvider: serviceProviderID })
+          .then((response) => {
+            if (response.length > 0) {
+              res.json(response);
+            } else {
+              res.json({
+                status: "Failed",
+                message: "No reviews available",
+              });
+            }
+          })
+          .catch((err) => {
+            console.log(err);
+            res.json({
+              status: "Failed",
+              message: "Error occured while getting reviews",
+            });
+          });
+      } else {
+        res.json({
+          status: "Failed",
+          message: "Service not found",
+        });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      res.json({
+        status: "Failed",
+        message: "Error occured while getting service details",
+      });
+    });
+});
+
+//get all reviews
+router.get("/get-all-reviews/:id", async (req, res) => {
+  const userID = req.params.id;
+
+  //check if user is available
+  await User.findOne({ _id: userID })
+    .then(async (response) => {
+      if (response) {
+        const reviews = await Review.find({})
+          .populate("serviceReviewed")
+          .catch((err) => {
+            console.log(err);
+            res.json({
+              status: "Failed",
+              message: "Error occured while getting reviews",
+            });
+          });
+
+        let filteredReviews = reviews.filter(function (reviews) {
+          if (reviews.serviceReviewed.provider == userID) {
+            return true;
+          }
+        });
+        res.send(filteredReviews);
+      } else {
+        res.json({
+          status: "Failed",
+          message: "User not found",
+        });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      res.json({
+        status: "Failed",
+        message: "Error occured while getting user data",
+      });
+    });
 });
 
 //delete review
@@ -878,11 +959,40 @@ router.delete("/delete-service-provider/:id", async (req, res) => {
           });
         } else {
           await ServiceProvider.deleteOne({ _id: serviceProviderID })
-            .then(() => {
-              res.json({
-                status: "Success",
-                message: "Successfully deleted",
-              });
+            .then(async () => {
+              await Review.find({ serviceReviewed: serviceProviderID })
+                .then(async (response) => {
+                  if (response.length > 0) {
+                    await Review.deleteMany({
+                      serviceReviewed: serviceProviderID,
+                    })
+                      .then(() => {
+                        res.json({
+                          status: "Success",
+                          message: "Service deleted with all its reviews",
+                        });
+                      })
+                      .catch((err) => {
+                        console.log(err);
+                        res.json({
+                          status: "Failed",
+                          message: "Error occured while deleting reviews",
+                        });
+                      });
+                  } else {
+                    res.json({
+                      status: "Success",
+                      message: "Service deleted (You had no reviews)",
+                    });
+                  }
+                })
+                .catch((err) => {
+                  console.log(err);
+                  res.json({
+                    status: "Failed",
+                    message: "Error occured while getting review data",
+                  });
+                });
             })
 
             .catch((err) => {
