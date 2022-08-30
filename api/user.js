@@ -24,8 +24,7 @@ let transporter = nodemailer.createTransport({
 });
 
 router.post("/signup", async (req, res) => {
-  let { firstName, lastName, email, phoneNumber, password, location } =
-    req.body;
+  let { firstName, lastName, email, phoneNumber, password } = req.body;
 
   if (!firstName || !lastName || !email || !phoneNumber || !password) {
     res.json({
@@ -69,7 +68,7 @@ router.post("/signup", async (req, res) => {
                 verified: false,
 
                 bio: "",
-                location,
+                location: "",
                 profilePicture: "",
                 isFeatured: false,
                 generalPromotedTitle: "",
