@@ -246,8 +246,6 @@ router.get("/verified", (req, res) => {
 
 router.post("/signin", (req, res) => {
   let { email, password } = req.body;
-  email = email.trim();
-  password = password.trim();
 
   if (!email || !password) {
     res.json({
@@ -269,6 +267,7 @@ router.post("/signin", (req, res) => {
               .compare(password, hashedPassword)
               .then(async (result) => {
                 if (result) {
+                  console.log("Hurray");
                   res.json({
                     status: "Success",
                     message: "Login successfull",
