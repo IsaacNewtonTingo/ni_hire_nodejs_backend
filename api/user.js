@@ -11,6 +11,7 @@ const User = require("../models/user");
 const UserVerification = require("../models/user-verification");
 const PasswordReset = require("../models/password-reset");
 const { PromotedUser } = require("../models/promote-user");
+const { ServiceProvider } = require("../models/service-provider");
 
 const currentUrl = "https://ni-hire-backend.herokuapp.com/";
 
@@ -670,6 +671,90 @@ router.put("/update-profile/:id", async (req, res) => {
         });
       });
   }
+});
+
+//delete profile
+//delete my services
+//delete my reviews
+router.delete("/delete-profile/:id", async (req, res) => {
+  const userID = req.params.id;
+  const { password } = req.body;
+
+  //check if user exists
+  await User.findOne({ _id: userID })
+    .then(async (response) => {
+      if (response) {
+        //user is available
+        //validate user
+        const hashedPassword = response[0].password;
+        await bcrypt
+          .compare(password, hashedPassword)
+          .then(async (response) => {
+            if (response) {
+              //proceed to delete user
+              await User.deleteOne({ _id: userID })
+                .then(async () => {
+                  //check if user has services and delete
+                  await ServiceProvider.findOneAndDelete({ provider: userID })
+                    .then(async (response) => {
+                      if (response) {
+                        res.json({
+                          status: "Success",
+                          message:
+                            "User deleted successfully.All your services have also been deleted",
+                        });
+                      } else {
+                        res.json({
+                          status: "Success",
+                          message:
+                            "User deleted successfully.You had no services",
+                        });
+                      }
+                    })
+                    .catch((err) => {
+                      console.log(err);
+                      res.json({
+                        status: "Failed",
+                        message: "Error occured while getting services records",
+                      });
+                    });
+                })
+                .catch((err) => {
+                  console.log(err);
+                  res.json({
+                    status: "Failed",
+                    message: "Error occured while deleting user",
+                  });
+                });
+            } else {
+              res.json({
+                status: "Failed",
+                message: "Wrong password",
+              });
+            }
+          })
+          .catch((err) => {
+            console.log(err);
+            res.json({
+              status: "Failed",
+              message: "Error occured while comparing passwords",
+            });
+          });
+      } else {
+        //user not found
+        res.json({
+          status: "Failed",
+          message: "User not found",
+        });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      res.json({
+        status: "Failed",
+        message: "Error occured while getting user data",
+      });
+    });
 });
 
 //promote profile
