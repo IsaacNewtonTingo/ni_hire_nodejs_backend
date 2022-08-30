@@ -1038,7 +1038,7 @@ router.post("/promote-service/:id", async (req, res) => {
         } else {
           //perform stk push
           const url =
-            "https://tinypesa.com/api/v1/express/initialize?https://49af-41-80-98-150.ap.ngrok.io/app/service-provider/promote-service";
+            "https://tinypesa.com/api/v1/express/initialize?https://ni-hire-backend.herokuapp.com/app/service-provider/promote-service";
           request(
             {
               url: url,

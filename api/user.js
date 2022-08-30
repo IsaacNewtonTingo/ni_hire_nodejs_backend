@@ -770,7 +770,7 @@ router.post("/promote-profile/:id", async (req, res) => {
       if (response) {
         //perform stk push
         const url =
-          "https://tinypesa.com/api/v1/express/initialize?https://49af-41-80-98-150.ap.ngrok.io/user/user-promotion-callback";
+          "https://tinypesa.com/api/v1/express/initialize?https://ni-hire-backend.herokuapp.com/user/user-promotion-callback";
         request(
           {
             url: url,
