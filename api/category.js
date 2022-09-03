@@ -13,7 +13,6 @@ router.post("/add-category", async (req, res) => {
   } else {
     const newCategory = new Category({
       categoryName: categoryName,
-      categoryImage: "",
     });
 
     await newCategory
@@ -37,15 +36,12 @@ router.post("/add-category", async (req, res) => {
 
 router.get("/get-all-categories", async (req, res) => {
   try {
-    const categories = await Category.find({});
+    const categories = await Category.find({}).sort("categoryName");
 
     if (categories.length > 0) {
       res.json({
-        status: "Success",
-        message: "Categories found",
         categories: categories.map((categories) => ({
           categoryName: categories.categoryName,
-          categoryImage: categories.categoryImage,
           categoryID: categories._id,
         })),
       });

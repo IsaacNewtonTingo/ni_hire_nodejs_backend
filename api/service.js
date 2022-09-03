@@ -127,7 +127,7 @@ router.get("/popular-services", async (req, res) => {
 router.get("/search-service", async (req, res) => {
   const { serviceName } = req.query;
 
-  if (!serviceName.trim()) {
+  if (!serviceName) {
     res.json({
       status: "Failed",
       message: "Please input a service to search",

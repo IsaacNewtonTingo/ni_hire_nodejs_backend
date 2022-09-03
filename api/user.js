@@ -245,6 +245,7 @@ router.get("/verified", (req, res) => {
 });
 
 router.post("/signin", (req, res) => {
+  console.log("Connected");
   let { email, password } = req.body;
 
   if (!email || !password) {

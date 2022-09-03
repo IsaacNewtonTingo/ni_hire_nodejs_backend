@@ -7,7 +7,7 @@ const ServiceSchema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Category",
   },
-  serviceProviders: [String],
 });
+// ServiceSchema.index({ serviceName: "text" });
 
 exports.Service = mongoose.model("Service", ServiceSchema);

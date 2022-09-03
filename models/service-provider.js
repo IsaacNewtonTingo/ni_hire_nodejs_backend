@@ -6,10 +6,6 @@ const ServiceProviderSchema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Service",
   },
-  category: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Category",
-  },
   description: String,
   image1: String,
   image2: String,
@@ -23,9 +19,6 @@ const ServiceProviderSchema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
   },
-
-  savedBy: [String],
-  serviceViewedBy: [String],
 });
 
 exports.ServiceProvider = mongoose.model(

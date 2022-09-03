@@ -8,9 +8,12 @@ const { Service } = require("../models/service");
 const { ServiceProvider } = require("../models/service-provider");
 const { Review } = require("../models/review");
 const { PromotedService } = require("../models/promoted-services");
+const { Category } = require("../models/category");
 
 var nodemailer = require("nodemailer");
 const request = require("request");
+
+var ObjectId = require("mongodb").ObjectId;
 
 let transporter = nodemailer.createTransport({
   service: "gmail",
@@ -21,13 +24,26 @@ let transporter = nodemailer.createTransport({
 });
 
 router.post("/add-service", async (req, res) => {
-  const { service, description, image1, image2, image3, rate, provider } =
-    req.body;
+  const {
+    service,
+    category,
+    description,
+    image1,
+    image2,
+    image3,
+    rate,
+    provider,
+  } = req.body;
 
   if (!service) {
     res.json({
       status: "Failed",
       message: "Service is missing",
+    });
+  } else if (!category) {
+    res.json({
+      status: "Failed",
+      message: "Category is missing",
     });
   } else if (!description) {
     res.json({
@@ -46,71 +62,121 @@ router.post("/add-service", async (req, res) => {
     });
   } else {
     //check if user exists
-    await User.find({ _id: provider })
+    await User.findOne({ _id: provider })
       .then(async (response) => {
-        if (response.length > 0) {
-          if (service.match(/^[0-9a-fA-F]{24}$/)) {
-            await Service.findById(service)
-              .then(async (response) => {
-                if (response) {
-                  const newServiceProvider = ServiceProvider({
-                    service,
-                    description,
-                    image1,
-                    image2,
-                    image3,
-                    rate: parseInt(rate.replace(/,/g, "")),
-                    rating: 0,
-                    isPromoted: false,
-                    datePromoted: "",
-                    provider,
-                    savedBy: [],
-                    serviceViewedBy: [],
-                  });
+        if (response) {
+          //check if category is valid
+          await Category.findOne({ _id: category })
+            .then(async (response) => {
+              if (response) {
+                //valid category
+                //check if service is already in db
+                await Service.findOne({
+                  serviceName: service,
+                })
+                  .then(async (response) => {
+                    if (response) {
+                      //service exists
+                      //don't add to db
 
-                  await newServiceProvider
-                    .save()
-                    .then((response) => {
-                      res.json({
-                        status: "Success",
-                        message: "Successfully posted",
-                        data: response,
+                      const newServiceProvider = ServiceProvider({
+                        service: response._id,
+                        description,
+                        image1,
+                        image2,
+                        image3,
+                        rate: parseInt(rate.replace(/,/g, "")),
+                        rating: 0,
+                        isPromoted: false,
+                        datePromoted: "",
+                        provider,
                       });
-                    })
-                    .catch((err) => {
-                      console.log(err);
-                      res.json({
-                        status: "Failed",
-                        message: "Error occured while posting service",
-                      });
-                    });
 
-                  await Service.updateOne(
-                    { _id: service },
-                    { $push: { serviceProviders: provider } }
-                  ).catch((err) => {
+                      newServiceProvider
+                        .save()
+                        .then(() => {
+                          res.json({
+                            status: "Success",
+                            message: "Posted successfully",
+                          });
+                        })
+                        .catch((err) => {
+                          console.log(err);
+                          res.json({
+                            status: "Failed",
+                            message: "Error occured while posting service",
+                          });
+                        });
+                    } else {
+                      //service doesnt exists
+                      //add service to db
+                      const newService = new Service({
+                        serviceName: service,
+                        category: category,
+                      });
+
+                      await newService
+                        .save()
+                        .then(async (response) => {
+                          const newServiceProvider = ServiceProvider({
+                            service: response._id,
+                            description,
+                            image1,
+                            image2,
+                            image3,
+                            rate: parseInt(rate.replace(/,/g, "")),
+                            rating: 0,
+                            isPromoted: false,
+                            datePromoted: "",
+                            provider,
+                          });
+                          //add service provider
+                          newServiceProvider
+                            .save()
+                            .then(() => {
+                              res.json({
+                                status: "Success",
+                                message: "Posted successfully",
+                              });
+                            })
+                            .catch((err) => {
+                              console.log(err);
+                              res.json({
+                                status: "Failed",
+                                message: "Error occured while posting service",
+                              });
+                            });
+                        })
+                        .catch((err) => {
+                          console.log(err);
+                          res.json({
+                            status: "Failed",
+                            message: "Error occured while saving service",
+                          });
+                        });
+                    }
+                  })
+                  .catch((err) => {
                     console.log(err);
+                    res.json({
+                      status: "Failed",
+                      message: "Error occured while finding service",
+                    });
                   });
-                } else {
-                  res.json({
-                    status: "Failed",
-                    message: "Service not found",
-                  });
-                }
-              })
-              .catch((err) => {
-                console.log(err);
+              } else {
                 res.json({
                   status: "Failed",
-                  message: "Error occured while finding service",
+                  message: "Invalid category",
                 });
+              }
+            })
+            .catch((err) => {
+              console.log(err);
+              res.json({
+                status: "Failed",
+                message: "Error occured while finding user data",
               });
-          } else {
-            res.json({
-              status: "Failed",
-              message: "ServiceID not valid",
             });
-          }
         } else {
           res.json({
             status: "Failed",
@@ -122,7 +188,7 @@ router.post("/add-service", async (req, res) => {
         console.log(err);
         res.json({
           status: "Failed",
-          message: "Error occured while finding user",
+          message: "Error occured while finding user data",
         });
       });
   }
