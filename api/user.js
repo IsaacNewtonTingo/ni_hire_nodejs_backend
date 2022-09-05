@@ -23,6 +23,7 @@ let transporter = nodemailer.createTransport({
   },
 });
 
+//signup
 router.post("/signup", async (req, res) => {
   let { firstName, lastName, email, phoneNumber, password } = req.body;
 
