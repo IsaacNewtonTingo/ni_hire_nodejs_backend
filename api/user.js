@@ -245,6 +245,7 @@ router.get("/verified", (req, res) => {
   res.sendFile(path.join(__dirname, "../views/verified.html"));
 });
 
+//login
 router.post("/signin", (req, res) => {
   console.log("Connected");
   let { email, password } = req.body;
