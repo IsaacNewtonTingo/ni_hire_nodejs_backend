@@ -887,6 +887,7 @@ router.get("/get-all-reviews/:id", async (req, res) => {
       if (response) {
         const reviews = await Review.find({})
           .populate("serviceReviewed")
+          .populate("whoReviewed")
           .catch((err) => {
             console.log(err);
             res.json({
