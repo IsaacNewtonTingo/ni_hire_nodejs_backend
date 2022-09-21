@@ -704,10 +704,7 @@ router.get("/get-my-services/:id", async (req, res) => {
     .populate("provider")
     .then((response) => {
       if (response.length > 0) {
-        res.json({
-          status: "Success",
-          data: response,
-        });
+        res.json(response);
       } else {
         res.json({
           status: "Failed",
