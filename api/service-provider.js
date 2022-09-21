@@ -896,7 +896,7 @@ router.get("/get-all-reviews/:id", async (req, res) => {
           });
 
         let filteredReviews = reviews.filter(function (reviews) {
-          if (reviews.serviceReviewed.provider == userID) {
+          if (reviews.serviceReviewed.provider._id == userID) {
             return true;
           }
         });
