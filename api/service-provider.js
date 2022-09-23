@@ -286,6 +286,48 @@ router.get("/category/get-all-service-providers/:id", async (req, res) => {
   }
 });
 
+//Get service providers in a given job
+router.get(
+  "/service/get-all-service-providers/:serviceName",
+  async (req, res) => {
+    const serviceName = req.params.serviceName.trim();
+
+    //check if service exists
+    await Service.findOne({ serviceName })
+      .then(async (response) => {
+        if (response) {
+          const serviceID = response._id;
+          await ServiceProvider.find({ service: serviceID })
+            .then((response) => {
+              if (response.length > 0) {
+                res.json(response);
+              } else {
+                res.json({
+                  status: "Failed",
+                  message: "No users found for the given service",
+                });
+              }
+            })
+            .catch((err) => {
+              console.log(err);
+              res.json({
+                status: "Failed",
+                message: "Error getting service providers",
+              });
+            });
+        } else {
+          res.json({
+            status: "Failed",
+            message: "Service not found",
+          });
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+);
+
 //Get featured service providers
 router.get("/get-featured", async (req, res) => {
   await ServiceProvider.find({ isPromoted: true })
@@ -609,7 +651,6 @@ router.get("/saved", async (req, res) => {
     });
 });
 
-//
 //search service providers
 router.get("/search-service-provider", async (req, res) => {
   const { serviceName, location, sort } = req.query;
