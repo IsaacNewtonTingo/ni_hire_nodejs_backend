@@ -298,6 +298,8 @@ router.get(
         if (response) {
           const serviceID = response._id;
           await ServiceProvider.find({ service: serviceID })
+            .populate("service")
+            .populate("provider")
             .then((response) => {
               if (response.length > 0) {
                 res.json(response);
