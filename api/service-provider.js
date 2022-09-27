@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 
+const cloudinary = require("../cloud");
+
 const User = require("../models/user");
 const { MySavedServiceProvider } = require("../models/my-saved-provider");
 const { MyViewedServiceProvider } = require("../models/my-viewed-providers");
@@ -23,6 +25,7 @@ let transporter = nodemailer.createTransport({
   },
 });
 
+//post service
 router.post("/add-service", async (req, res) => {
   const {
     service,
@@ -78,6 +81,12 @@ router.post("/add-service", async (req, res) => {
                     if (response) {
                       //service exists
                       //don't add to db
+
+                      await cloudinary.uploader
+                        .upload(image1)
+                        .then((result) => {
+                          console.log(result);
+                        });
 
                       const newServiceProvider = ServiceProvider({
                         service: response._id,
@@ -884,7 +893,9 @@ router.get("/get-reviews-for-a-service/:id", async (req, res) => {
   await ServiceProvider.findOne({ _id: serviceProviderID })
     .then(async (response) => {
       if (response) {
-        await Review.find({ serviceProvider: serviceProviderID })
+        await Review.find({ serviceReviewed: serviceProviderID })
+          .populate("serviceReviewed")
+          .populate("whoReviewed")
           .then((response) => {
             if (response.length > 0) {
               res.json(response);
