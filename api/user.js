@@ -623,6 +623,7 @@ router.put("/update-profile/:id", async (req, res) => {
                   {
                     firstName: req.body.firstName,
                     lastName: req.body.lastName,
+                    phoneNumber: req.body.phoneNumber,
                     profilePicture: req.body.profilePicture,
                     bio: req.body.bio,
                     location: req.body.location,
