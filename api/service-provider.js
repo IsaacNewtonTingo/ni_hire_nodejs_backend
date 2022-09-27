@@ -603,7 +603,7 @@ router.post("/save-post", async (req, res) => {
 });
 
 //Get recently viewed
-router.get("/recently-viewed:id", async (req, res) => {
+router.get("/recently-viewed/:id", async (req, res) => {
   const userID = req.params.id;
 
   await MyViewedServiceProvider.find({ user: userID })
