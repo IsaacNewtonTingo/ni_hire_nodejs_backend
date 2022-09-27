@@ -1,8 +1,6 @@
 const express = require("express");
 const router = express.Router();
 
-const cloudinary = require("../cloud");
-
 const User = require("../models/user");
 const { MySavedServiceProvider } = require("../models/my-saved-provider");
 const { MyViewedServiceProvider } = require("../models/my-viewed-providers");
@@ -81,12 +79,6 @@ router.post("/add-service", async (req, res) => {
                     if (response) {
                       //service exists
                       //don't add to db
-
-                      await cloudinary.uploader
-                        .upload(image1)
-                        .then((result) => {
-                          console.log(result);
-                        });
 
                       const newServiceProvider = ServiceProvider({
                         service: response._id,
@@ -973,7 +965,7 @@ router.get("/get-all-reviews/:id", async (req, res) => {
 //delete review
 router.delete("/delete-review/:id", async (req, res) => {
   const reviewID = req.params.id;
-  const { userID } = req.query;
+  const { userID } = req.body;
 
   //Check if user exists
   await User.findOne({ _id: userID })
@@ -1066,7 +1058,7 @@ router.put("/edit-service-provider/:id", async (req, res) => {
 //delete service
 router.delete("/delete-service-provider/:id", async (req, res) => {
   const serviceProviderID = req.params.id;
-  const { userID } = req.body;
+  const { userID } = req.query;
 
   await ServiceProvider.findOne({ _id: serviceProviderID })
     .then(async (response) => {

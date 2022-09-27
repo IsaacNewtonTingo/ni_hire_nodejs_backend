@@ -1,7 +1,6 @@
 const express = require("express");
 const bodyParser = require("body-parser").json;
 const cors = require("cors");
-const morgan = require("morgan");
 require("dotenv").config();
 
 const app = express();
@@ -9,7 +8,6 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(bodyParser());
-app.use(morgan());
 
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);
