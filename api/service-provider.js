@@ -614,7 +614,7 @@ router.get("/recently-viewed/:id", async (req, res) => {
     })
     .populate({ path: "provider", populate: { path: "provider" } })
 
-    .limit(4)
+    .limit(10)
     .then((response) => {
       res.send(response);
     })
@@ -626,6 +626,79 @@ router.get("/recently-viewed/:id", async (req, res) => {
         message: "Error occured while getting service provider data",
       });
     });
+});
+
+//Get service viewers
+router.get("/get-service-viewers/:id", async (req, res) => {
+  const serviceProviderID = req.params.id;
+  const { providerID } = req.query;
+
+  //Check provider details
+  await User.findOne({ _id: providerID }).then(async (response) => {
+    if (response) {
+      //Provider is present
+      const isPremium = response.isFeatured;
+
+      if (isPremium == true) {
+        //send data with user details
+        await MyViewedServiceProvider.find({
+          provider: serviceProviderID,
+        })
+          .populate("user")
+          .populate({ path: "provider", populate: { path: "provider" } })
+
+          .then((response) => {
+            res.json({
+              message: "Feat",
+              data: response.map((response) => ({
+                _id: response.user._id,
+                firstName: response.user.firstName,
+                lastName: response.user.lastName,
+                email: response.user.email,
+                phoneNumber: response.user.phoneNumber,
+                bio: response.user.bio,
+                location: response.user.location,
+                profilePicture: response.user.profilePicture,
+              })),
+            });
+          })
+          .catch((err) => {
+            console.log(err);
+            res.json({
+              status: "Failed",
+              message: "Error occured while getting service views",
+            });
+          });
+      } else {
+        await MyViewedServiceProvider.find({
+          provider: serviceProviderID,
+        })
+          .populate("user")
+          .populate({ path: "provider", populate: { path: "provider" } })
+
+          .then((response) => {
+            res.json({
+              data: response.map((response) => ({
+                firstName: response.user.firstName,
+              })),
+            });
+          })
+          .catch((err) => {
+            console.log(err);
+            res.json({
+              status: "Failed",
+              message: "Error occured while getting service views",
+            });
+          });
+      }
+    } else {
+      //Provider not found
+      res.json({
+        status: "Failed",
+        message: "Service provider not found",
+      });
+    }
+  });
 });
 
 //get saved
