@@ -978,4 +978,69 @@ router.post("/add-profile-visits/:id", async (req, res) => {
   }
 });
 
+//Get profile visits
+router.get("/get-profile-visits/:id", async (req, res) => {
+  const currentUserID = req.params.id;
+
+  if (!currentUserID) {
+    res.json({
+      status: "Failed",
+      message: "Missing parameters",
+    });
+  } else {
+    //Check if user exists
+    await User.findOne({ _id: currentUserID }).then(async (response) => {
+      if (response) {
+        //User exists
+        //Check if user is premium
+        const isPremiumUser = response.isFeatured;
+
+        await ProfileVisit.find({
+          whoWasVisited: currentUserID,
+        })
+          .populate("whoVisited")
+          .populate("whoWasVisited")
+
+          .then(async (response) => {
+            if (isPremiumUser === false) {
+              //None premium users
+              res.json({
+                data: response.map((response) => ({
+                  whoVisited: response.whoVisited.firstName,
+                })),
+              });
+            } else {
+              //Premium data
+              res.json({
+                data: response.map((response) => ({
+                  _id: response.whoVisited._id,
+                  firstName: response.whoVisited.firstName,
+                  lastName: response.whoVisited.lastName,
+                  email: response.whoVisited.email,
+                  phoneNumber: response.whoVisited.phoneNumber,
+                  bio: response.whoVisited.bio,
+                  location: response.whoVisited.location,
+                  profilePicture: response.whoVisited.profilePicture,
+                })),
+              });
+            }
+          })
+          .catch((err) => {
+            console.log(err);
+            res.json({
+              status: "Failed",
+              message: "Error occured while getting profile visits",
+            });
+          });
+      } else {
+        //User doesn't exist
+        res.json({
+          status: "Failed",
+          message: "User not found",
+        });
+      }
+    });
+  }
+});
+
 module.exports = router;
