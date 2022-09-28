@@ -12,6 +12,7 @@ const UserVerification = require("../models/user-verification");
 const PasswordReset = require("../models/password-reset");
 const { PromotedUser } = require("../models/promote-user");
 const { ServiceProvider } = require("../models/service-provider");
+const { ProfileVisit } = require("../models/profile-visits");
 
 const currentUrl = "https://ni-hire-backend.herokuapp.com/";
 
@@ -853,6 +854,127 @@ router.post("/user-promotion-callback", async (req, res) => {
   } else {
     //Payment unsuccessfull
     console.log("Request not completed/Cancelled");
+  }
+});
+
+//Add profile visits
+router.post("/add-profile-visits/:id", async (req, res) => {
+  const currentUserID = req.params.id;
+  const { providerID } = req.query;
+
+  if (!currentUserID || !providerID) {
+    res.json({
+      status: "Failed",
+      message: "Missing parameters",
+    });
+  } else if (currentUserID == providerID) {
+    res.json({
+      status: "Failed",
+      message: "Operation prohibited",
+    });
+  } else {
+    //Check if current user is available
+    await User.findOne({ _id: currentUserID })
+      .then(async (response) => {
+        if (response) {
+          //Current user is available
+          //Check if provider is available
+          await User.findOne({ _id: providerID })
+            .then(async (response) => {
+              if (response) {
+                //Provider is available
+                //Check if they had already visited
+                await ProfileVisit.findOneAndDelete({
+                  $and: [
+                    { whoVisited: currentUserID },
+                    { whoWasVisited: providerID },
+                  ],
+                })
+                  .then(async (response) => {
+                    const newProfileVisit = new ProfileVisit({
+                      whoVisited: currentUserID,
+                      whoWasVisited: providerID,
+                    });
+
+                    if (response) {
+                      //Deletion has occured
+                      //Add new visit
+
+                      await newProfileVisit
+                        .save()
+                        .then(() => {
+                          res.json({
+                            status: "Success",
+                            message:
+                              "Deleted existing data and added to profile visits successfully",
+                          });
+                        })
+                        .catch((err) => {
+                          console.log(err);
+                          res.json({
+                            status: "Failed",
+                            message: "Error occured while saving profile visit",
+                          });
+                        });
+                    } else {
+                      //nothing to delete
+                      //Freshly data to add
+
+                      await newProfileVisit
+                        .save()
+                        .then(() => {
+                          res.json({
+                            status: "Success",
+                            message:
+                              "Freshly added to profile visits successfully",
+                          });
+                        })
+                        .catch((err) => {
+                          console.log(err);
+                          res.json({
+                            status: "Failed",
+                            message: "Error occured while saving profile visit",
+                          });
+                        });
+                    }
+                  })
+                  .catch((err) => {
+                    console.log(err);
+                    res.json({
+                      status: "Failed",
+                      message: "Error occured while deleting",
+                    });
+                  });
+              } else {
+                //provider not found
+                res.json({
+                  status: "Failed",
+                  message: "Service provider not found",
+                });
+              }
+            })
+            .catch((err) => {
+              console.log(err);
+              res.json({
+                status: "Failed",
+                message: "Error occured while getting service provider records",
+              });
+            });
+        } else {
+          //Current user not found
+          res.json({
+            status: "Failed",
+            message: "User not found",
+          });
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        res.json({
+          status: "Failed",
+          message: "Error occured while getting user data",
+        });
+      });
   }
 });
 
