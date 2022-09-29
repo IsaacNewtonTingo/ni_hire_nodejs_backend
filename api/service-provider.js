@@ -628,7 +628,50 @@ router.get("/get-saved-services/:id", async (req, res) => {
 });
 
 //Check if service is saved by a user
-router.get("/check-if-saved/:id", async (req, res) => {});
+router.get("/check-if-saved/:id", async (req, res) => {
+  const serviceProviderID = req.params.id;
+  const { currentUserID } = req.query;
+  //Check if service is available
+  await ServiceProvider.findOne({ _id: serviceProviderID })
+    .then(async (response) => {
+      if (response) {
+        //service is available
+        //check if it has been saved
+        await MySavedServiceProvider.findOne({
+          $and: [{ user: currentUserID }, { provider: serviceProviderID }],
+        })
+          .then((response) => {
+            if (response) {
+              //It is saved
+              res.send("saved");
+            } else {
+              //Not saved
+              res.send("Not saved");
+            }
+          })
+          .catch((err) => {
+            console.log(err);
+            res.json({
+              status: "Failed",
+              message: "Error occured while checking saved data",
+            });
+          });
+      } else {
+        //Service not found
+        res.json({
+          status: "Failed",
+          message: "Service not found",
+        });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      res.json({
+        status: "Failed",
+        message: "Error occured while checking service data",
+      });
+    });
+});
 
 //Remove from saves
 router.delete("/unsave-post/:id", async (req, res) => {
