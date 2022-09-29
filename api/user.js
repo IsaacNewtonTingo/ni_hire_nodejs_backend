@@ -894,6 +894,7 @@ router.post("/add-profile-visits/:id", async (req, res) => {
                     const newProfileVisit = new ProfileVisit({
                       whoVisited: currentUserID,
                       whoWasVisited: providerID,
+                      dateVisited: Date.now() + 10800000,
                     });
 
                     if (response) {

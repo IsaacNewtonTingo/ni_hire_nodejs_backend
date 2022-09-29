@@ -478,7 +478,7 @@ router.post("/add-viewed-by", async (req, res) => {
 });
 
 //Add to saved by
-router.post("/save-post", async (req, res) => {
+router.post("/save-service", async (req, res) => {
   const { serviceProviderID, userID } = req.body;
   if (!serviceProviderID) {
     res.json({
@@ -602,6 +602,107 @@ router.post("/save-post", async (req, res) => {
   }
 });
 
+//get saved
+router.get("/get-saved-services/:id", async (req, res) => {
+  const userID = req.params.id;
+
+  await MySavedServiceProvider.find({ user: userID })
+
+    .populate({
+      path: "provider",
+      populate: { path: "service", select: "serviceName" },
+    })
+    .populate({ path: "provider", populate: { path: "provider" } })
+
+    .then((response) => {
+      res.send(response);
+    })
+
+    .catch((err) => {
+      console.log(err);
+      res.json({
+        status: "Failed",
+        message: "Error occured while getting service provider data",
+      });
+    });
+});
+
+//Check if service is saved by a user
+router.get("/check-if-saved/:id", async (req, res) => {});
+
+//Remove from saves
+router.delete("/unsave-post/:id", async (req, res) => {
+  const serviceProviderID = req.params.id;
+  const { currentUserID } = req.query;
+
+  await ServiceProvider.findOne({ _id: serviceProviderID })
+    .then(async (response) => {
+      if (response) {
+        //Service available
+        //Check if user is still available
+        await User.findOne({ _id: currentUserID })
+          .then(async (response) => {
+            if (response) {
+              //User is available
+              //Find the saved service and delete
+              await MySavedServiceProvider.findOneAndDelete({
+                $and: [
+                  { user: currentUserID },
+                  { provider: serviceProviderID },
+                ],
+              })
+                .then((response) => {
+                  if (response) {
+                    res.json({
+                      status: "Success",
+                      message: "Item deleted from saved items",
+                    });
+                  } else {
+                    res.json({
+                      status: "Failed",
+                      message: "Item not found to be deleted",
+                    });
+                  }
+                })
+                .catch((err) => {
+                  console.log(err);
+                  res.json({
+                    status: "Failed",
+                    message: "Error occured while deleting saved item",
+                  });
+                });
+            } else {
+              //User not available
+              res.json({
+                status: "Failed",
+                message: "User not found. Might have been deleted",
+              });
+            }
+          })
+          .catch((err) => {
+            console.log(err);
+            res.json({
+              status: "Failed",
+              message: "Error occured while getting user data",
+            });
+          });
+      } else {
+        //Service not available
+        res.json({
+          status: "Failed",
+          message: "Service not availble. Might have been deleted",
+        });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      res.json({
+        status: "Failed",
+        message: "Error occured while checking service details",
+      });
+    });
+});
+
 //Get recently viewed
 router.get("/recently-viewed/:id", async (req, res) => {
   const userID = req.params.id;
@@ -699,32 +800,6 @@ router.get("/get-service-viewers/:id", async (req, res) => {
       });
     }
   });
-});
-
-//get saved
-router.get("/saved", async (req, res) => {
-  const { userID } = req.body;
-
-  await MySavedServiceProvider.find({ user: userID })
-
-    .populate({
-      path: "provider",
-      populate: { path: "service", select: "serviceName" },
-    })
-    .populate({ path: "provider", populate: { path: "provider" } })
-
-    .limit(4)
-    .then((response) => {
-      res.send(response);
-    })
-
-    .catch((err) => {
-      console.log(err);
-      res.json({
-        status: "Failed",
-        message: "Error occured while getting service provider data",
-      });
-    });
 });
 
 //search service providers
