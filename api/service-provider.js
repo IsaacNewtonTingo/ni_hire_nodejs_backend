@@ -674,7 +674,7 @@ router.get("/check-if-saved/:id", async (req, res) => {
 });
 
 //Remove from saves
-router.delete("/unsave-post/:id", async (req, res) => {
+router.delete("/unsave-service/:id", async (req, res) => {
   const serviceProviderID = req.params.id;
   const { currentUserID } = req.query;
 
