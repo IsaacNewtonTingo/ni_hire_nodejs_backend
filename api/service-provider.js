@@ -643,10 +643,17 @@ router.get("/check-if-saved/:id", async (req, res) => {
           .then((response) => {
             if (response) {
               //It is saved
-              res.send("saved");
+              res.json({
+                status: "Success",
+                message: "You had saved the service",
+              });
             } else {
               //Not saved
-              res.send("Not saved");
+
+              res.json({
+                status: "Failed",
+                message: "You have not saved the service",
+              });
             }
           })
           .catch((err) => {
