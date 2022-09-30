@@ -14,6 +14,7 @@ const ServiceProviderSchema = new Schema({
   rating: Number,
   isPromoted: Boolean,
   datePromoted: Date,
+  dateCreated: Date,
 
   provider: {
     type: mongoose.Schema.Types.ObjectId,

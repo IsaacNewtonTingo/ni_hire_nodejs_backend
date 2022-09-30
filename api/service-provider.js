@@ -91,6 +91,7 @@ router.post("/add-service", async (req, res) => {
                         rating: 0,
                         isPromoted: false,
                         datePromoted: "",
+                        dateCreated: Date.now(),
                         provider,
                       });
 
@@ -163,10 +164,12 @@ router.post("/add-service", async (req, res) => {
                             image1,
                             image2,
                             image3,
-                            rate: parseInt(rate.replace(/,/g, "")),
+                            rate,
+                            // rate: parseInt(rate.replace(/,/g, "")),
                             rating: 0,
                             isPromoted: false,
                             datePromoted: "",
+                            dateCreated: Date.now(),
                             provider,
                           });
                           //add service provider
