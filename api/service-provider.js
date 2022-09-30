@@ -86,20 +86,58 @@ router.post("/add-service", async (req, res) => {
                         image1,
                         image2,
                         image3,
-                        rate: parseInt(rate.replace(/,/g, "")),
+                        rate,
+                        // rate: parseInt(rate.replace(/,/g, "")),
                         rating: 0,
                         isPromoted: false,
                         datePromoted: "",
                         provider,
                       });
 
-                      newServiceProvider
-                        .save()
-                        .then(() => {
-                          res.json({
-                            status: "Success",
-                            message: "Posted successfully",
-                          });
+                      //check if they already have the service
+                      const serviceID = response._id;
+
+                      await ServiceProvider.findOneAndDelete({
+                        $and: [{ service: serviceID }, { provider }],
+                      })
+                        .then((response) => {
+                          if (response) {
+                            //service was there and is deleted
+                            newServiceProvider
+                              .save()
+                              .then(() => {
+                                res.json({
+                                  status: "Success",
+                                  message: "Replaced successfully",
+                                });
+                              })
+                              .catch((err) => {
+                                console.log(err);
+                                res.json({
+                                  status: "Failed",
+                                  message:
+                                    "Error occured while replacing service",
+                                });
+                              });
+                          } else {
+                            //service wasnt there
+                            newServiceProvider
+                              .save()
+                              .then(() => {
+                                res.json({
+                                  status: "Success",
+                                  message: "Posted successfully",
+                                });
+                              })
+                              .catch((err) => {
+                                console.log(err);
+                                res.json({
+                                  status: "Failed",
+                                  message:
+                                    "Error occured while posting service",
+                                });
+                              });
+                          }
                         })
                         .catch((err) => {
                           console.log(err);
