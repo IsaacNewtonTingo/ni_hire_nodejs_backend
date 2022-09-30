@@ -1204,7 +1204,7 @@ router.get("/get-all-reviews/:id", async (req, res) => {
 //delete review
 router.delete("/delete-review/:id", async (req, res) => {
   const reviewID = req.params.id;
-  const { userID } = req.body;
+  const { userID } = req.query;
 
   //Check if user exists
   await User.findOne({ _id: userID })
