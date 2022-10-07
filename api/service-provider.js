@@ -808,7 +808,6 @@ router.get("/recently-viewed/:id", async (req, res) => {
       populate: { path: "service", select: "serviceName" },
     })
     .populate({ path: "provider", populate: { path: "provider" } })
-    .sort({ dateViewed: -1 })
 
     .limit(10)
     .then((response) => {
