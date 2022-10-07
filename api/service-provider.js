@@ -238,12 +238,16 @@ router.post("/add-service", async (req, res) => {
 
 //Get all service providers
 router.get("/get-all-service-providers", async (req, res) => {
+  const { pageNumber = 0, limit = 10 } = req.query;
+
   const serviceProviders = await ServiceProvider.find({})
     .populate({ path: "service", populate: { path: "category" } })
     .populate("provider")
-    .sort({ isPromoted: -1 });
+    .sort({ isPromoted: -1 })
+    .skip(parseInt(pageNumber) * parseInt(limit))
+    .limit(parseInt(limit));
 
-  // const serviceProviderCount = await ServiceProvider.countDocuments();
+  const serviceProviderCount = await ServiceProvider.countDocuments();
 
   res.json({
     serviceProviders: serviceProviders.map((serviceProviders) => ({
@@ -262,7 +266,7 @@ router.get("/get-all-service-providers", async (req, res) => {
       serviceViewedBy: serviceProviders.serviceViewedBy,
       id: serviceProviders._id,
     })),
-    // serviceProviderCount,
+    serviceProviderCount,
   });
 });
 
