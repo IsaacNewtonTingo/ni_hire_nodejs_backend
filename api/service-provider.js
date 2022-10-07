@@ -802,7 +802,6 @@ router.get("/recently-viewed/:id", async (req, res) => {
   const userID = req.params.id;
 
   await MyViewedServiceProvider.find({ user: userID })
-
     .populate({
       path: "provider",
       populate: { path: "service", select: "serviceName" },
