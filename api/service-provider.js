@@ -240,7 +240,8 @@ router.post("/add-service", async (req, res) => {
 router.get("/get-all-service-providers", async (req, res) => {
   const serviceProviders = await ServiceProvider.find({})
     .populate({ path: "service", populate: { path: "category" } })
-    .populate("provider");
+    .populate("provider")
+    .sort({ isPromoted: -1 });
 
   // const serviceProviderCount = await ServiceProvider.countDocuments();
 
@@ -342,6 +343,7 @@ router.get(
           await ServiceProvider.find({ service: serviceID })
             .populate("service")
             .populate("provider")
+            .sort({ isPromoted: -1 })
             .then((response) => {
               if (response.length > 0) {
                 res.json(response);
@@ -420,7 +422,7 @@ router.post("/add-viewed-by", async (req, res) => {
                       new MyViewedServiceProvider({
                         user: userID,
                         provider: serviceProviderID,
-                        dateViewed: Date.now() + 10800000,
+                        dateViewed: Date.now(),
                       });
 
                     if (response.length > 0) {
@@ -549,7 +551,7 @@ router.post("/save-service", async (req, res) => {
                       new MySavedServiceProvider({
                         user: userID,
                         provider: serviceProviderID,
-                        dateSaved: Date.now() + 10800000,
+                        dateSaved: Date.now(),
                       });
 
                     if (response.length > 0) {
@@ -654,6 +656,7 @@ router.get("/get-saved-services/:id", async (req, res) => {
       populate: { path: "service", select: "serviceName" },
     })
     .populate({ path: "provider", populate: { path: "provider" } })
+    .sort({ dateSaved: -1 })
 
     .then((response) => {
       res.send(response);
@@ -805,6 +808,7 @@ router.get("/recently-viewed/:id", async (req, res) => {
       populate: { path: "service", select: "serviceName" },
     })
     .populate({ path: "provider", populate: { path: "provider" } })
+    .sort({ dateViewed: -1 })
 
     .limit(10)
     .then((response) => {
