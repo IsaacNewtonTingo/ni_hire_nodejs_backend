@@ -909,7 +909,11 @@ router.get("/filter-service-provider", async (req, res) => {
 
   if (serviceName && !location) {
     const servers = await ServiceProvider.find({})
-      .sort({ rate: rate, rating: rating, isPromoted: isPromoted })
+      .sort({
+        rate: parseInt(rate),
+        rating: parseInt(rating),
+        isPromoted: parseInt(isPromoted),
+      })
       .populate({ path: "service", populate: { path: "category" } })
       .populate("provider")
       .skip(parseInt(pageNumber) * parseInt(limit))
@@ -940,7 +944,11 @@ router.get("/filter-service-provider", async (req, res) => {
     });
   } else if (serviceName && location) {
     const servers = await ServiceProvider.find({})
-      .sort({ rate: rate, rating: rating, isPromoted: isPromoted })
+      .sort({
+        rate: parseInt(rate),
+        rating: parseInt(rating),
+        isPromoted: parseInt(isPromoted),
+      })
       .populate({ path: "service", populate: { path: "category" } })
       .populate("provider")
       .skip(parseInt(pageNumber) * parseInt(limit))
@@ -970,7 +978,11 @@ router.get("/filter-service-provider", async (req, res) => {
     });
   } else if (!serviceName && location) {
     const servers = await ServiceProvider.find({})
-      .sort({ rate: rate, rating: rating, isPromoted: isPromoted })
+      .sort({
+        rate: parseInt(rate),
+        rating: parseInt(rating),
+        isPromoted: parseInt(isPromoted),
+      })
       .populate({ path: "service", populate: { path: "category" } })
       .populate("provider")
       .skip(parseInt(pageNumber) * parseInt(limit))
@@ -998,7 +1010,10 @@ router.get("/filter-service-provider", async (req, res) => {
     });
   } else {
     const servers = await ServiceProvider.find({})
-      .sort({ rate: rate, rating: rating, isPromoted: isPromoted })
+      .sort({
+        isPromoted: parseInt(isPromoted),
+        rate: parseInt(rate),
+      })
       .populate({ path: "service", populate: { path: "category" } })
       .populate("provider")
       .skip(parseInt(pageNumber) * parseInt(limit))
