@@ -13,6 +13,7 @@ const PasswordReset = require("../models/password-reset");
 const { PromotedUser } = require("../models/promote-user");
 const { ServiceProvider } = require("../models/service-provider");
 const { ProfileVisit } = require("../models/profile-visits");
+const { BugReport } = require("../models/bug-report");
 
 const currentUrl = "https://ni-hire-backend.herokuapp.com/";
 
@@ -1042,6 +1043,84 @@ router.get("/get-profile-visits/:id", async (req, res) => {
       }
     });
   }
+});
+
+//Bug report
+router.post("/bug-report/:id", async (req, res) => {
+  const userID = req.params.id;
+  const { message } = req.body;
+
+  //check if user exists
+  await User.findOne({ _id: userID })
+    .then(async (response) => {
+      if (response) {
+        //user found
+        const userName = response.firstName + response.lastName;
+        const email = response.email;
+        const phoneNumber = response.phoneNumber;
+
+        //add report
+        const newBugReport = new BugReport({
+          whoReported: userID,
+          message: message,
+          reportDate: Date.now(),
+        });
+
+        await newBugReport
+          .save()
+          .then(async () => {
+            //send email
+            const mailOptions = {
+              from: process.env.AUTH_EMAIL,
+              to: "newtontingo@gmail.com",
+              subject: "Bug report",
+              html: `<p>${message}</p>
+                      <br/>
+                      <br/>
+                      <p>Name:<strong>${userName}</strong></p>
+                      <p>Phone number:<strong>${phoneNumber}</strong></p>
+                      <p>Email:<strong>${email}</strong></p>
+                      `,
+            };
+
+            await transporter
+              .sendMail(mailOptions)
+              .then(() => {
+                res.json({
+                  status: "Success",
+                  message: "Reported successfully",
+                });
+              })
+              .catch((err) => {
+                console.log(err);
+                res.json({
+                  status: "Failed",
+                  message: "Error occured while sending bug report email.",
+                });
+              });
+          })
+          .catch((err) => {
+            console.log(err);
+            res.json({
+              status: "Failed",
+              message: "Error occured while saving bug report",
+            });
+          });
+      } else {
+        //user not found
+        res.json({
+          status: "Failed",
+          message: "User not found",
+        });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      res.json({
+        status: "Failed",
+        message: "Error occured while checking user records",
+      });
+    });
 });
 
 module.exports = router;
