@@ -250,22 +250,7 @@ router.get("/get-all-service-providers", async (req, res) => {
   const serviceProviderCount = await ServiceProvider.countDocuments();
 
   res.json({
-    serviceProviders: serviceProviders.map((serviceProviders) => ({
-      rate: serviceProviders.rate,
-      service: serviceProviders.service,
-      category: serviceProviders.category,
-      description: serviceProviders.description,
-      image1: serviceProviders.image1,
-      image2: serviceProviders.image2,
-      image3: serviceProviders.image3,
-      rating: serviceProviders.rating,
-      isPromoted: serviceProviders.isPromoted,
-      datePromoted: serviceProviders.datePromoted,
-      provider: serviceProviders.provider,
-      savedBy: serviceProviders.savedBy,
-      serviceViewedBy: serviceProviders.serviceViewedBy,
-      id: serviceProviders._id,
-    })),
+    serviceProviders: serviceProviders,
     serviceProviderCount,
   });
 });
