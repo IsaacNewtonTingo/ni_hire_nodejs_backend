@@ -241,16 +241,16 @@ router.get("/get-all-service-providers", async (req, res) => {
   const {
     pageNumber = 0,
     limit = 20,
-    serviceName,
+
+    isPromoted,
     rate,
     rating,
-    location,
   } = req.query;
 
   const serviceProviders = await ServiceProvider.find({})
     .populate({ path: "service", populate: { path: "category" } })
     .populate("provider")
-    .sort({ isPromoted: -1 })
+    .sort({ isPromoted: isPromoted, rate, rating })
     .skip(parseInt(pageNumber) * parseInt(limit))
     .limit(parseInt(limit));
 
@@ -896,12 +896,14 @@ router.get("/get-service-viewers/:id", async (req, res) => {
 router.get("/filter-service-provider", async (req, res) => {
   const {
     serviceName,
-    isPromoted,
-    rate,
-    rating,
     location,
+
     limit = 20,
     pageNumber = 0,
+
+    rate,
+    rating,
+    isPromoted,
   } = req.query;
   const newLocation = "Kenya";
 
