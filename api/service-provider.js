@@ -238,7 +238,14 @@ router.post("/add-service", async (req, res) => {
 
 //Get all service providers
 router.get("/get-all-service-providers", async (req, res) => {
-  const { pageNumber = 0, limit = 10 } = req.query;
+  const {
+    pageNumber = 0,
+    limit = 20,
+    serviceName,
+    rate,
+    rating,
+    location,
+  } = req.query;
 
   const serviceProviders = await ServiceProvider.find({})
     .populate({ path: "service", populate: { path: "category" } })
@@ -886,13 +893,13 @@ router.get("/get-service-viewers/:id", async (req, res) => {
 });
 
 //search service providers
-router.get("/search-service-provider", async (req, res) => {
-  const { serviceName, location, sort } = req.query;
+router.get("/filter-service-provider", async (req, res) => {
+  const { serviceName, isPromoted, rate, rating, location } = req.query;
   const newLocation = "Kenya";
 
   if (serviceName && !location) {
     const servers = await ServiceProvider.find({})
-      .sort(sort)
+      .sort({ rate: rate, rating: rating, isPromoted: isPromoted })
       .populate({ path: "service", populate: { path: "category" } })
       .populate("provider")
       .catch((err) => {
@@ -915,7 +922,7 @@ router.get("/search-service-provider", async (req, res) => {
     res.send(filteredServiceProviders);
   } else if (serviceName && location) {
     const servers = await ServiceProvider.find({})
-      .sort(sort)
+      .sort({ rate: rate, rating: rating, isPromoted: isPromoted })
       .populate({ path: "service", populate: { path: "category" } })
       .populate("provider")
       .catch((err) => {
@@ -938,7 +945,7 @@ router.get("/search-service-provider", async (req, res) => {
     res.send(filteredServiceProviders);
   } else if (!serviceName && location) {
     const servers = await ServiceProvider.find({})
-      .sort(sort)
+      .sort({ rate: rate, rating: rating, isPromoted: isPromoted })
       .populate({ path: "service", populate: { path: "category" } })
       .populate("provider")
       .catch((err) => {
@@ -958,7 +965,7 @@ router.get("/search-service-provider", async (req, res) => {
     res.send(filteredServiceProviders);
   } else {
     const servers = await ServiceProvider.find({})
-      .sort(sort)
+      .sort({ rate: rate, rating: rating, isPromoted: isPromoted })
       .populate({ path: "service", populate: { path: "category" } })
       .populate("provider")
       .catch((err) => {
