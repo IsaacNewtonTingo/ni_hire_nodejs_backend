@@ -1055,7 +1055,7 @@ router.post("/bug-report/:id", async (req, res) => {
     .then(async (response) => {
       if (response) {
         //user found
-        const userName = response.firstName + response.lastName;
+        const userName = response.firstName + " " + response.lastName;
         const email = response.email;
         const phoneNumber = response.phoneNumber;
 
