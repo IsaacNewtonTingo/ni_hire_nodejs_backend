@@ -894,7 +894,15 @@ router.get("/get-service-viewers/:id", async (req, res) => {
 
 //search service providers
 router.get("/filter-service-provider", async (req, res) => {
-  const { serviceName, isPromoted, rate, rating, location } = req.query;
+  const {
+    serviceName,
+    isPromoted,
+    rate,
+    rating,
+    location,
+    limit = 20,
+    pageNumber = 0,
+  } = req.query;
   const newLocation = "Kenya";
 
   if (serviceName && !location) {
@@ -902,6 +910,9 @@ router.get("/filter-service-provider", async (req, res) => {
       .sort({ rate: rate, rating: rating, isPromoted: isPromoted })
       .populate({ path: "service", populate: { path: "category" } })
       .populate("provider")
+      .skip(parseInt(pageNumber) * parseInt(limit))
+      .limit(parseInt(limit))
+
       .catch((err) => {
         console.log(err);
         res.json({
@@ -919,12 +930,20 @@ router.get("/filter-service-provider", async (req, res) => {
       }
     });
 
-    res.send(filteredServiceProviders);
+    const serviceProviderCount = filteredServiceProviders.length;
+
+    res.json({
+      serviceProviders: filteredServiceProviders,
+      serviceProviderCount,
+    });
   } else if (serviceName && location) {
     const servers = await ServiceProvider.find({})
       .sort({ rate: rate, rating: rating, isPromoted: isPromoted })
       .populate({ path: "service", populate: { path: "category" } })
       .populate("provider")
+      .skip(parseInt(pageNumber) * parseInt(limit))
+      .limit(parseInt(limit))
+
       .catch((err) => {
         console.log(err);
         res.json({
@@ -941,13 +960,20 @@ router.get("/filter-service-provider", async (req, res) => {
         return true;
       }
     });
+    const serviceProviderCount = filteredServiceProviders.length;
 
-    res.send(filteredServiceProviders);
+    res.json({
+      serviceProviders: filteredServiceProviders,
+      serviceProviderCount,
+    });
   } else if (!serviceName && location) {
     const servers = await ServiceProvider.find({})
       .sort({ rate: rate, rating: rating, isPromoted: isPromoted })
       .populate({ path: "service", populate: { path: "category" } })
       .populate("provider")
+      .skip(parseInt(pageNumber) * parseInt(limit))
+      .limit(parseInt(limit))
+
       .catch((err) => {
         console.log(err);
         res.json({
@@ -962,12 +988,20 @@ router.get("/filter-service-provider", async (req, res) => {
       }
     });
 
-    res.send(filteredServiceProviders);
+    const serviceProviderCount = filteredServiceProviders.length;
+
+    res.json({
+      serviceProviders: filteredServiceProviders,
+      serviceProviderCount,
+    });
   } else {
     const servers = await ServiceProvider.find({})
       .sort({ rate: rate, rating: rating, isPromoted: isPromoted })
       .populate({ path: "service", populate: { path: "category" } })
       .populate("provider")
+      .skip(parseInt(pageNumber) * parseInt(limit))
+      .limit(parseInt(limit))
+
       .catch((err) => {
         console.log(err);
         res.json({
@@ -975,7 +1009,13 @@ router.get("/filter-service-provider", async (req, res) => {
           message: "Error occured while searching service",
         });
       });
-    res.send(servers);
+
+    const serviceProviderCount = await ServiceProvider.countDocuments();
+
+    res.json({
+      serviceProviders: servers,
+      serviceProviderCount,
+    });
   }
 });
 
