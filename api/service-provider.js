@@ -374,7 +374,7 @@ router.get(
               })
                 .populate("service")
                 .populate("provider")
-                .sort({ rate, rating })
+                .sort({ rate: parseInt(rate), rating: parseInt(rating) })
                 .skip(parseInt(pageNumber) * parseInt(limit))
                 .limit(parseInt(limit))
 
@@ -432,7 +432,7 @@ router.get(
               })
                 .populate("service")
                 .populate("provider")
-                .sort({ rate, rating })
+                .sort({ rate: parseInt(rate), rating: parseInt(rating) })
                 .skip(parseInt(pageNumber) * parseInt(limit))
                 .limit(parseInt(limit))
 
