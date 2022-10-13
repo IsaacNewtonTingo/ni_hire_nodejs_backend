@@ -344,63 +344,121 @@ router.get(
           const serviceID = response._id;
 
           if (!location) {
-            const serviceProviders = await ServiceProvider.find({
-              service: serviceID,
-            })
-              .populate("service")
-              .populate("provider")
-              .sort({ rate, rating })
-              .skip(parseInt(pageNumber) * parseInt(limit))
-              .limit(parseInt(limit));
+            if (!isPromoted) {
+              const serviceProviders = await ServiceProvider.find({
+                service: serviceID,
+              })
+                .populate("service")
+                .populate("provider")
+                .sort({ isPromoted: -1 })
+                .skip(parseInt(pageNumber) * parseInt(limit))
+                .limit(parseInt(limit))
 
-            const serviceProviderCount = serviceProviders.length;
+                .catch((err) => {
+                  console.log(err);
+                  res.json({
+                    status: "Failed",
+                    message: "Error getting service providers",
+                  });
+                });
 
-            res
-              .json({
+              const serviceProviderCount = serviceProviders.length;
+
+              res.json({
+                serviceProviders: serviceProviders,
+                serviceProviderCount,
+              });
+            } else {
+              const serviceProviders = await ServiceProvider.find({
+                service: serviceID,
+              })
+                .populate("service")
+                .populate("provider")
+                .sort({ rate, rating })
+                .skip(parseInt(pageNumber) * parseInt(limit))
+                .limit(parseInt(limit))
+
+                .catch((err) => {
+                  console.log(err);
+                  res.json({
+                    status: "Failed",
+                    message: "Error getting service providers",
+                  });
+                });
+
+              const serviceProviderCount = serviceProviders.length;
+
+              res.json({
                 serviceProviders,
                 serviceProviderCount,
-              })
-
-              .catch((err) => {
-                console.log(err);
-                res.json({
-                  status: "Failed",
-                  message: "Error getting service providers",
-                });
               });
+            }
           } else {
-            const serviceProviders = await ServiceProvider.find({
-              service: serviceID,
-            })
-              .populate("service")
-              .populate("provider")
-              .sort({ rate, rating })
-              .skip(parseInt(pageNumber) * parseInt(limit))
-              .limit(parseInt(limit));
+            if (!isPromoted) {
+              const serviceProviders = await ServiceProvider.find({
+                service: serviceID,
+              })
+                .populate("service")
+                .populate("provider")
+                .sort({ isPromoted: -1 })
+                .skip(parseInt(pageNumber) * parseInt(limit))
+                .limit(parseInt(limit))
 
-            let filteredUsers = serviceProviders.filter(function (
-              serviceProviders
-            ) {
-              if (serviceProviders.service.serviceName == serviceName) {
-                return true;
-              }
-            });
+                .catch((err) => {
+                  console.log(err);
+                  res.json({
+                    status: "Failed",
+                    message: "Error getting service providers",
+                  });
+                });
 
-            const serviceProviderCount = filteredUsers.length;
+              let filteredUsers = serviceProviders.filter(function (
+                serviceProviders
+              ) {
+                if (serviceProviders.provider.location == location) {
+                  return true;
+                }
+              });
 
-            res
-              .json({
+              const serviceProviderCount = filteredUsers.length;
+
+              res.json({
                 serviceProviders: filteredUsers,
                 serviceProviderCount,
-              })
-
-              .catch((err) => {
-                console.log(err);
-                res.json({
-                  status: "Failed",
-                  message: "Error getting service providers",
-                });
               });
+            } else {
+              const serviceProviders = await ServiceProvider.find({
+                service: serviceID,
+              })
+                .populate("service")
+                .populate("provider")
+                .sort({ rate, rating })
+                .skip(parseInt(pageNumber) * parseInt(limit))
+                .limit(parseInt(limit))
+
+                .catch((err) => {
+                  console.log(err);
+                  res.json({
+                    status: "Failed",
+                    message: "Error getting service providers",
+                  });
+                });
+
+              let filteredUsers = serviceProviders.filter(function (
+                serviceProviders
+              ) {
+                if (serviceProviders.provider.location == location) {
+                  return true;
+                }
+              });
+
+              const serviceProviderCount = filteredUsers.length;
+
+              res.json({
+                serviceProviders: filteredUsers,
+                serviceProviderCount,
+              });
+            }
           }
         } else {
           res.json({
