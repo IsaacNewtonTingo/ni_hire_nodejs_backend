@@ -1023,6 +1023,7 @@ router.get("/filter-service-provider", async (req, res) => {
   const newLocation = "Kenya";
 
   if (serviceName && !location) {
+    console.log("Service name but no location");
     const servers = await ServiceProvider.find({})
       .sort({
         rate: parseInt(rate),
@@ -1043,10 +1044,7 @@ router.get("/filter-service-provider", async (req, res) => {
       });
 
     let filteredServiceProviders = servers.filter(function (servers) {
-      if (
-        servers.service.serviceName == serviceName &&
-        servers.provider.location.includes(newLocation)
-      ) {
+      if (servers.service.serviceName == serviceName) {
         return true;
       }
     });
@@ -1058,6 +1056,7 @@ router.get("/filter-service-provider", async (req, res) => {
       serviceProviderCount,
     });
   } else if (serviceName && location) {
+    console.log("Service name and location");
     const servers = await ServiceProvider.find({})
       .sort({
         rate: parseInt(rate),
@@ -1092,6 +1091,7 @@ router.get("/filter-service-provider", async (req, res) => {
       serviceProviderCount,
     });
   } else if (!serviceName && location) {
+    console.log("No Service name but yes location");
     const servers = await ServiceProvider.find({})
       .sort({
         rate: parseInt(rate),
@@ -1124,6 +1124,7 @@ router.get("/filter-service-provider", async (req, res) => {
       serviceProviderCount,
     });
   } else {
+    console.log("Other");
     const servers = await ServiceProvider.find({})
       .sort({
         isPromoted: parseInt(isPromoted),
