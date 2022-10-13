@@ -13,8 +13,6 @@ const { Category } = require("../models/category");
 var nodemailer = require("nodemailer");
 const request = require("request");
 
-var ObjectId = require("mongodb").ObjectId;
-
 let transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -330,33 +328,65 @@ router.get(
   "/service/get-all-service-providers/:serviceName",
   async (req, res) => {
     const serviceName = req.params.serviceName.trim();
+    const { limit = 20, pageNumber = 0, isPromoted, rate, rating } = req.query;
 
     //check if service exists
     await Service.findOne({ serviceName })
       .then(async (response) => {
         if (response) {
           const serviceID = response._id;
-          await ServiceProvider.find({ service: serviceID })
-            .populate("service")
-            .populate("provider")
-            .sort({ isPromoted: -1 })
-            .then((response) => {
-              if (response.length > 0) {
-                res.json(response);
-              } else {
+
+          if (!isPromoted) {
+            await ServiceProvider.find({ service: serviceID })
+              .populate("service")
+              .populate("provider")
+              .sort({ isPromoted: -1 })
+              .skip(parseInt(pageNumber) * parseInt(limit))
+              .limit(parseInt(limit))
+
+              .then((response) => {
+                if (response.length > 0) {
+                  res.json(response);
+                } else {
+                  res.json({
+                    status: "Failed",
+                    message: "No users found for the given service",
+                  });
+                }
+              })
+              .catch((err) => {
+                console.log(err);
                 res.json({
                   status: "Failed",
-                  message: "No users found for the given service",
+                  message: "Error getting service providers",
                 });
-              }
-            })
-            .catch((err) => {
-              console.log(err);
-              res.json({
-                status: "Failed",
-                message: "Error getting service providers",
               });
-            });
+          } else {
+            await ServiceProvider.find({ service: serviceID })
+              .populate("service")
+              .populate("provider")
+              .sort({ rate, rating })
+              .skip(parseInt(pageNumber) * parseInt(limit))
+              .limit(parseInt(limit))
+
+              .then((response) => {
+                if (response.length > 0) {
+                  res.json(response);
+                } else {
+                  res.json({
+                    status: "Failed",
+                    message: "No users found for the given service",
+                  });
+                }
+              })
+              .catch((err) => {
+                console.log(err);
+                res.json({
+                  status: "Failed",
+                  message: "Error getting service providers",
+                });
+              });
+          }
         } else {
           res.json({
             status: "Failed",
@@ -372,9 +402,21 @@ router.get(
 
 //Get featured service providers
 router.get("/get-featured", async (req, res) => {
+  const {
+    limit = 20,
+    pageNumber = 0,
+    serviceName,
+    location,
+    rate,
+    rating,
+  } = req.query;
+
   await ServiceProvider.find({ isPromoted: true })
     .populate({ path: "service", populate: { path: "category" } })
     .populate("provider")
+    .skip(parseInt(pageNumber) * parseInt(limit))
+    .limit(parseInt(limit))
+
     .then((response) => {
       res.send(response);
     })
