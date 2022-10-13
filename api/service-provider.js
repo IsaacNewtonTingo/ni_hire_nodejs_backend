@@ -337,23 +337,23 @@ router.get(
           const serviceID = response._id;
 
           if (!isPromoted) {
-            await ServiceProvider.find({ service: serviceID })
+            const serviceProviders = await ServiceProvider.find({
+              service: serviceID,
+            })
               .populate("service")
               .populate("provider")
               .sort({ isPromoted: -1 })
               .skip(parseInt(pageNumber) * parseInt(limit))
-              .limit(parseInt(limit))
+              .limit(parseInt(limit));
 
-              .then((response) => {
-                if (response.length > 0) {
-                  res.json(response);
-                } else {
-                  res.json({
-                    status: "Failed",
-                    message: "No users found for the given service",
-                  });
-                }
+            const serviceProviderCount = serviceProviders.length;
+
+            res
+              .json({
+                serviceProviders: serviceProviders,
+                serviceProviderCount,
               })
+
               .catch((err) => {
                 console.log(err);
                 res.json({
@@ -362,23 +362,23 @@ router.get(
                 });
               });
           } else {
-            await ServiceProvider.find({ service: serviceID })
+            const serviceProviders = await ServiceProvider.find({
+              service: serviceID,
+            })
               .populate("service")
               .populate("provider")
               .sort({ rate, rating })
               .skip(parseInt(pageNumber) * parseInt(limit))
-              .limit(parseInt(limit))
+              .limit(parseInt(limit));
 
-              .then((response) => {
-                if (response.length > 0) {
-                  res.json(response);
-                } else {
-                  res.json({
-                    status: "Failed",
-                    message: "No users found for the given service",
-                  });
-                }
+            const serviceProviderCount = serviceProviders.length;
+
+            res
+              .json({
+                serviceProviders,
+                serviceProviderCount,
               })
+
               .catch((err) => {
                 console.log(err);
                 res.json({
