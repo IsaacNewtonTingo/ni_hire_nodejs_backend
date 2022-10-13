@@ -328,7 +328,14 @@ router.get(
   "/service/get-all-service-providers/:serviceName",
   async (req, res) => {
     const serviceName = req.params.serviceName.trim();
-    const { limit = 20, pageNumber = 0, isPromoted, rate, rating } = req.query;
+    const {
+      limit = 20,
+      pageNumber = 0,
+      isPromoted,
+      rate,
+      rating,
+      location,
+    } = req.query;
 
     //check if service exists
     await Service.findOne({ serviceName })
@@ -336,56 +343,126 @@ router.get(
         if (response) {
           const serviceID = response._id;
 
-          if (!isPromoted) {
-            const serviceProviders = await ServiceProvider.find({
-              service: serviceID,
-            })
-              .populate("service")
-              .populate("provider")
-              .sort({ isPromoted: -1 })
-              .skip(parseInt(pageNumber) * parseInt(limit))
-              .limit(parseInt(limit));
-
-            const serviceProviderCount = serviceProviders.length;
-
-            res
-              .json({
-                serviceProviders: serviceProviders,
-                serviceProviderCount,
+          if (!location) {
+            if (!isPromoted) {
+              const serviceProviders = await ServiceProvider.find({
+                service: serviceID,
               })
+                .populate("service")
+                .populate("provider")
+                .sort({ isPromoted: -1 })
+                .skip(parseInt(pageNumber) * parseInt(limit))
+                .limit(parseInt(limit));
 
-              .catch((err) => {
-                console.log(err);
-                res.json({
-                  status: "Failed",
-                  message: "Error getting service providers",
+              const serviceProviderCount = serviceProviders.length;
+
+              res
+                .json({
+                  serviceProviders: serviceProviders,
+                  serviceProviderCount,
+                })
+
+                .catch((err) => {
+                  console.log(err);
+                  res.json({
+                    status: "Failed",
+                    message: "Error getting service providers",
+                  });
                 });
-              });
+            } else {
+              const serviceProviders = await ServiceProvider.find({
+                service: serviceID,
+              })
+                .populate("service")
+                .populate("provider")
+                .sort({ rate, rating })
+                .skip(parseInt(pageNumber) * parseInt(limit))
+                .limit(parseInt(limit));
+
+              const serviceProviderCount = serviceProviders.length;
+
+              res
+                .json({
+                  serviceProviders,
+                  serviceProviderCount,
+                })
+
+                .catch((err) => {
+                  console.log(err);
+                  res.json({
+                    status: "Failed",
+                    message: "Error getting service providers",
+                  });
+                });
+            }
           } else {
-            const serviceProviders = await ServiceProvider.find({
-              service: serviceID,
-            })
-              .populate("service")
-              .populate("provider")
-              .sort({ rate, rating })
-              .skip(parseInt(pageNumber) * parseInt(limit))
-              .limit(parseInt(limit));
-
-            const serviceProviderCount = serviceProviders.length;
-
-            res
-              .json({
-                serviceProviders,
-                serviceProviderCount,
+            if (!isPromoted) {
+              const serviceProviders = await ServiceProvider.find({
+                service: serviceID,
               })
+                .populate("service")
+                .populate("provider")
+                .sort({ isPromoted: -1 })
+                .skip(parseInt(pageNumber) * parseInt(limit))
+                .limit(parseInt(limit));
 
-              .catch((err) => {
-                console.log(err);
-                res.json({
-                  status: "Failed",
-                  message: "Error getting service providers",
-                });
+              let filteredUsers = serviceProviders.filter(function (
+                serviceProviders
+              ) {
+                if (serviceProviders.service.serviceName == serviceName) {
+                  return true;
+                }
               });
+
+              const serviceProviderCount = filteredUsers.length;
+
+              res
+                .json({
+                  serviceProviders: filteredUsers,
+                  serviceProviderCount,
+                })
+
+                .catch((err) => {
+                  console.log(err);
+                  res.json({
+                    status: "Failed",
+                    message: "Error getting service providers",
+                  });
+                });
+            } else {
+              const serviceProviders = await ServiceProvider.find({
+                service: serviceID,
+              })
+                .populate("service")
+                .populate("provider")
+                .sort({ rate, rating })
+                .skip(parseInt(pageNumber) * parseInt(limit))
+                .limit(parseInt(limit));
+
+              let filteredUsers = serviceProviders.filter(function (
+                serviceProviders
+              ) {
+                if (serviceProviders.service.serviceName == serviceName) {
+                  return true;
+                }
+              });
+
+              const serviceProviderCount = filteredUsers.length;
+
+              res
+                .json({
+                  serviceProviders: filteredUsers,
+                  serviceProviderCount,
+                })
+
+                .catch((err) => {
+                  console.log(err);
+                  res.json({
+                    status: "Failed",
+                    message: "Error getting service providers",
+                  });
+                });
+            }
           }
         } else {
           res.json({
