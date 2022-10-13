@@ -1023,7 +1023,6 @@ router.get("/filter-service-provider", async (req, res) => {
   const newLocation = "Kenya";
 
   if (serviceName && !location) {
-    console.log("Service name but no location");
     const servers = await ServiceProvider.find({})
       .sort({
         rate: parseInt(rate),
@@ -1056,7 +1055,6 @@ router.get("/filter-service-provider", async (req, res) => {
       serviceProviderCount,
     });
   } else if (serviceName && location) {
-    console.log("Service name and location");
     const servers = await ServiceProvider.find({})
       .sort({
         rate: parseInt(rate),
@@ -1091,7 +1089,6 @@ router.get("/filter-service-provider", async (req, res) => {
       serviceProviderCount,
     });
   } else if (!serviceName && location) {
-    console.log("No Service name but yes location");
     const servers = await ServiceProvider.find({})
       .sort({
         rate: parseInt(rate),
@@ -1124,7 +1121,6 @@ router.get("/filter-service-provider", async (req, res) => {
       serviceProviderCount,
     });
   } else {
-    console.log("Other");
     const servers = await ServiceProvider.find({})
       .sort({
         isPromoted: parseInt(isPromoted),
@@ -1485,14 +1481,128 @@ router.delete("/delete-service-provider/:id", async (req, res) => {
               await Review.find({ serviceReviewed: serviceProviderID })
                 .then(async (response) => {
                   if (response.length > 0) {
+                    //reviews found
                     await Review.deleteMany({
                       serviceReviewed: serviceProviderID,
                     })
-                      .then(() => {
-                        res.json({
-                          status: "Success",
-                          message: "Service deleted with all its reviews",
-                        });
+                      .then(async () => {
+                        //find all recent views and delete
+                        await MyViewedServiceProvider.find({
+                          provider: serviceProviderID,
+                        })
+                          .then(async (response) => {
+                            if (response.length > 0) {
+                              //Recent views found
+                              //delete recent views
+                              await MyViewedServiceProvider.deleteMany({
+                                provider: serviceProviderID,
+                              })
+                                .then(async () => {
+                                  //check if saved by a user and delete
+                                  await MySavedServiceProvider.find({
+                                    provider: serviceProviderID,
+                                  })
+                                    .then(async (response) => {
+                                      if (response.length > 0) {
+                                        //has been saved
+                                        await MySavedServiceProvider.deleteMany(
+                                          { provider: serviceProviderID }
+                                        )
+                                          .then(() => {
+                                            res.json({
+                                              status: "Success",
+                                              message:
+                                                "Service,rreviews,recent views,saved deleted",
+                                            });
+                                          })
+                                          .catch((err) => {
+                                            console.log(err);
+                                            res.json({
+                                              status: "Failed",
+                                              message:
+                                                "Error occured while deleting saved",
+                                            });
+                                          });
+                                      } else {
+                                        //not saved
+                                        res.json({
+                                          status: "Success",
+                                          message:
+                                            "Service,reviews,recent views deleted but had not been saved",
+                                        });
+                                      }
+                                    })
+                                    .catch((err) => {
+                                      console.log(err);
+                                      res.json({
+                                        status: "Failed",
+                                        message:
+                                          "Error occured while getting saved data",
+                                      });
+                                    });
+                                })
+                                .catch((err) => {
+                                  res.json({
+                                    status: "Failed",
+                                    message:
+                                      "Error occured while deleting reviews and recent views",
+                                  });
+                                });
+                            } else {
+                              //no recent views
+                              //check if saved and delete
+
+                              await MySavedServiceProvider.find({
+                                provider: serviceProviderID,
+                              })
+                                .then(async (response) => {
+                                  if (response.length > 0) {
+                                    //has been saved
+                                    await MySavedServiceProvider.deleteMany({
+                                      provider: serviceProviderID,
+                                    })
+                                      .then(() => {
+                                        res.json({
+                                          status: "Success",
+                                          message:
+                                            "Service,reviews,saved deleted",
+                                        });
+                                      })
+                                      .catch((err) => {
+                                        console.log(err);
+                                        res.json({
+                                          status: "Failed",
+                                          message:
+                                            "Error occured while deleting saved",
+                                        });
+                                      });
+                                  } else {
+                                    //not saved
+                                    res.json({
+                                      status: "Success",
+                                      message:
+                                        "Service,reviews,deleted but had not been saved",
+                                    });
+                                  }
+                                })
+                                .catch((err) => {
+                                  console.log(err);
+                                  res.json({
+                                    status: "Failed",
+                                    message:
+                                      "Error occured while getting saved data",
+                                  });
+                                });
+                            }
+                          })
+                          .catch((err) => {
+                            console.log(err);
+                            res.json({
+                              status: "Failed",
+                              message:
+                                "Error occured while getting recent views",
+                            });
+                          });
                       })
                       .catch((err) => {
                         console.log(err);
@@ -1502,10 +1612,120 @@ router.delete("/delete-service-provider/:id", async (req, res) => {
                         });
                       });
                   } else {
-                    res.json({
-                      status: "Success",
-                      message: "Service deleted (You had no reviews)",
-                    });
+                    //reviews not found
+                    await MyViewedServiceProvider.find({
+                      provider: serviceProviderID,
+                    })
+                      .then(async (response) => {
+                        if (response.length > 0) {
+                          //Recent views found
+                          //delete recent views
+                          await MyViewedServiceProvider.deleteMany({
+                            provider: serviceProviderID,
+                          })
+                            .then(async () => {
+                              //check if saved and delete
+                              await MySavedServiceProvider.find({
+                                provider: serviceProviderID,
+                              })
+                                .then(async (response) => {
+                                  if (response.length > 0) {
+                                    //has been saved
+                                    await MySavedServiceProvider.deleteMany({
+                                      provider: serviceProviderID,
+                                    })
+                                      .then(() => {
+                                        res.json({
+                                          status: "Success",
+                                          message:
+                                            "Service,rreviews,recent views,saved deleted",
+                                        });
+                                      })
+                                      .catch((err) => {
+                                        console.log(err);
+                                        res.json({
+                                          status: "Failed",
+                                          message:
+                                            "Error occured while deleting saved",
+                                        });
+                                      });
+                                  } else {
+                                    //not saved
+                                    res.json({
+                                      status: "Success",
+                                      message:
+                                        "Service,reviews,recent views deleted but had not been saved",
+                                    });
+                                  }
+                                })
+                                .catch((err) => {
+                                  console.log(err);
+                                  res.json({
+                                    status: "Failed",
+                                    message:
+                                      "Error occured while getting saved data",
+                                  });
+                                });
+                            })
+                            .catch((err) => {
+                              res.json({
+                                status: "Failed",
+                                message:
+                                  "Error occured while deleting recent views",
+                              });
+                            });
+                        } else {
+                          //no recent views
+                          await MySavedServiceProvider.find({
+                            provider: serviceProviderID,
+                          })
+                            .then(async (response) => {
+                              if (response.length > 0) {
+                                //has been saved
+                                await MySavedServiceProvider.deleteMany({
+                                  provider: serviceProviderID,
+                                })
+                                  .then(() => {
+                                    res.json({
+                                      status: "Success",
+                                      message:
+                                        "Service,rreviews,recent views,saved deleted",
+                                    });
+                                  })
+                                  .catch((err) => {
+                                    console.log(err);
+                                    res.json({
+                                      status: "Failed",
+                                      message:
+                                        "Error occured while deleting saved",
+                                    });
+                                  });
+                              } else {
+                                //not saved
+                                res.json({
+                                  status: "Success",
+                                  message:
+                                    "Service,reviews,recent views deleted but had not been saved",
+                                });
+                              }
+                            })
+                            .catch((err) => {
+                              console.log(err);
+                              res.json({
+                                status: "Failed",
+                                message:
+                                  "Error occured while getting saved data",
+                              });
+                            });
+                        }
+                      })
+                      .catch((err) => {
+                        console.log(err);
+                        res.json({
+                          status: "Failed",
+                          message: "Error occured while getting recent views",
+                        });
+                      });
                   }
                 })
                 .catch((err) => {
