@@ -1190,7 +1190,7 @@ const sendChangeEmailRequest = ({ userID, newEmail }, res) => {
     .hash(uniqueString, saltRounds)
     .then((hashedUniqueString) => {
       const newEmailChange = new EmailChange({
-        userId: userID,
+        userID: userID,
         newEmail: newEmail,
         uniqueString: hashedUniqueString,
         createdAt: Date.now(),
