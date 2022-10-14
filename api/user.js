@@ -14,6 +14,8 @@ const { PromotedUser } = require("../models/promote-user");
 const { ServiceProvider } = require("../models/service-provider");
 const { ProfileVisit } = require("../models/profile-visits");
 const { BugReport } = require("../models/bug-report");
+const { route } = require("./service-provider");
+const { EmailChange } = require("../models/email-change");
 
 const currentUrl = "https://ni-hire-backend.herokuapp.com/";
 
@@ -1120,6 +1122,194 @@ router.post("/bug-report/:id", async (req, res) => {
         status: "Failed",
         message: "Error occured while checking user records",
       });
+    });
+});
+
+//edit email
+router.post("/edit-email/:id", async (req, res) => {
+  const userID = req.params.id;
+  const { newEmail } = req.body;
+
+  //check if user exists
+  await User.findOne({ _id: userID })
+    .then(async (response) => {
+      if (response) {
+        //user found
+        //Check if email has been used
+        await User.find({ email: newEmail })
+          .then(async (response) => {
+            if (response.length > 0) {
+              //email exists
+              res.json({
+                status: "Failed",
+                message:
+                  "Email provided has already been used. Try a different one",
+              });
+            } else {
+              //email doesnt exist
+              sendChangeEmailRequest({ userID, newEmail }, res);
+            }
+          })
+          .catch((err) => {
+            console.log(err);
+            res.json({
+              status: "Failed",
+              message: "Error occured while checking email records",
+            });
+          });
+      } else {
+        //user not found
+        res.json({
+          status: "Failed",
+          message: "User not found",
+        });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      res.json({
+        status: "Failed",
+        message: "Error occured while searching user",
+      });
+    });
+});
+
+const sendChangeEmailRequest = ({ userID, newEmail }, res) => {
+  const uniqueString = uuidv4() + userID;
+  const mailOptions = {
+    from: process.env.AUTH_EMAIL,
+    to: newEmail,
+    subject: "Verify your email",
+    html: `<p>Verify your email to complete your email change request process.</p><p>Link <b>expires in 6hrs.</b></p><p>Press <a href=${
+      currentUrl + "user/change-email/" + userID + "/" + uniqueString
+    }> here </a>to proceed </p>`,
+  };
+
+  const saltRounds = 10;
+  bcrypt
+    .hash(uniqueString, saltRounds)
+    .then((hashedUniqueString) => {
+      const newEmailChange = new EmailChange({
+        userId: userID,
+        newEmail: newEmail,
+        uniqueString: hashedUniqueString,
+        createdAt: Date.now(),
+        expiresAt: Date.now() + 21600000,
+      });
+      newEmailChange
+        .save()
+        .then(() => {
+          transporter
+            .sendMail(mailOptions)
+            .then(() => {
+              res.json({
+                status: "Pending",
+                message:
+                  "Verification email sent.Check your mailbox to verify new email",
+              });
+            })
+            .catch((err) => {
+              res.json({
+                status: "Failed",
+                message: "Error occured sending verification email",
+              });
+            });
+        })
+        .catch((err) => {
+          res.json({
+            status: "Failed",
+            message: "Couldn't save verification email data",
+          });
+        });
+    })
+    .catch((err) => {
+      res.json({
+        status: "Failed",
+        message: "Error occured hashing email data",
+      });
+    });
+};
+
+router.get("/change-email/:userID/:uniqueString", (req, res) => {
+  let { userID, uniqueString } = req.params;
+
+  EmailChange.find({ userID })
+    .then((result) => {
+      if (result.length > 0) {
+        const { expiresAt } = result[0];
+        const hashedUniqueString = result[0].uniqueString;
+        const newEmail = result[0].newEmail;
+
+        if (expiresAt < Date.now()) {
+          EmailChange.deleteOne({ userID })
+            .then((result) => {
+              User.deleteOne({ _id: userID })
+                .then(() => {
+                  let message = "Link has expired. Change email again";
+                  res.redirect(`/user/verified/?error=true&message=${message}`);
+                })
+                .catch((err) => {
+                  console.log(err);
+                  let message = "Clearing user data failed";
+                  res.redirect(`/user/verified/?error=true&message=${message}`);
+                });
+            })
+            .catch((err) => {
+              console.log(err);
+              let message =
+                "An error occured while clearing expired verification data";
+              res.redirect(`/user/verified/?error=true&message=${message}`);
+            });
+        } else {
+          bcrypt
+            .compare(uniqueString, hashedUniqueString)
+            .then((result) => {
+              if (result) {
+                User.updateOne({ _id: userID }, { email: newEmail })
+                  .then(() => {
+                    EmailChange.deleteOne({ userID })
+                      .then(() => {
+                        res.sendFile(
+                          path.join(__dirname, "../views/verified.html")
+                        );
+                      })
+                      .catch((err) => {
+                        console.log(err);
+                        let message =
+                          "An error occured while deleting verified user";
+                        res.redirect(
+                          `/user/verified/?error=true&message=${message}`
+                        );
+                      });
+                  })
+                  .catch((err) => {
+                    console.log(err);
+                    let message =
+                      "An error occured while updating user records";
+                    res.redirect(
+                      `/user/verified/?error=true&message=${message}`
+                    );
+                  });
+              } else {
+                let message = "Invalid verification details. Check your inbox";
+                res.redirect(`/user/verified/?error=true&message=${message}`);
+              }
+            })
+            .catch((err) => {
+              let message = "An error occured while comparing unique strings";
+              res.redirect(`/user/verified/?error=true&message=${message}`);
+            });
+        }
+      } else {
+        let message =
+          "Account record doesn't exists or has been verified already. Please signup or login";
+        res.redirect(`/user/verified/?error=true&message=${message}`);
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      let message = "An error occured whilechecking verified email";
+      res.redirect(`/user/verified/?error=true&message=${message}`);
     });
 });
 
