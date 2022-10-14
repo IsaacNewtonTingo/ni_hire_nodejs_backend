@@ -1128,33 +1128,54 @@ router.post("/bug-report/:id", async (req, res) => {
 //edit email
 router.post("/edit-email/:id", async (req, res) => {
   const userID = req.params.id;
-  const { newEmail } = req.body;
+  const { newEmail, password } = req.body;
 
   //check if user exists
   await User.findOne({ _id: userID })
     .then(async (response) => {
       if (response) {
         //user found
-        //Check if email has been used
-        await User.find({ email: newEmail })
+        //confirm password
+        const hashedPassword = response.password;
+        bcrypt
+          .compare(password, hashedPassword)
           .then(async (response) => {
-            if (response.length > 0) {
-              //email exists
+            if (response) {
+              //Check if email has been used
+              await User.find({ email: newEmail })
+                .then(async (response) => {
+                  if (response.length > 0) {
+                    //email exists
+                    res.json({
+                      status: "Failed",
+                      message:
+                        "Email provided has already been used. Try a different one",
+                    });
+                  } else {
+                    //email doesnt exist
+                    sendChangeEmailRequest({ userID, newEmail }, res);
+                  }
+                })
+                .catch((err) => {
+                  console.log(err);
+                  res.json({
+                    status: "Failed",
+                    message: "Error occured while checking email records",
+                  });
+                });
+            } else {
+              //invalid pass
               res.json({
                 status: "Failed",
-                message:
-                  "Email provided has already been used. Try a different one",
+                message: "Invalid password",
               });
-            } else {
-              //email doesnt exist
-              sendChangeEmailRequest({ userID, newEmail }, res);
             }
           })
           .catch((err) => {
             console.log(err);
             res.json({
               status: "Failed",
-              message: "Error occured while checking email records",
+              message: "Error occured whilecomparing passwords",
             });
           });
       } else {
@@ -1208,8 +1229,7 @@ const sendChangeEmailRequest = ({ userID, newEmail }, res) => {
             //there were previous requests
             await EmailChange.deleteMany({
               userID,
-            })
-            .then(() => {
+            }).then(() => {
               newEmailChange
                 .save()
                 .then(() => {
