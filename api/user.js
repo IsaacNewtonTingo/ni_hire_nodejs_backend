@@ -1176,6 +1176,7 @@ router.post("/edit-email/:id", async (req, res) => {
 
 const sendChangeEmailRequest = ({ userID, newEmail }, res) => {
   const uniqueString = uuidv4() + userID;
+
   const mailOptions = {
     from: process.env.AUTH_EMAIL,
     to: newEmail,
@@ -1188,7 +1189,7 @@ const sendChangeEmailRequest = ({ userID, newEmail }, res) => {
   const saltRounds = 10;
   bcrypt
     .hash(uniqueString, saltRounds)
-    .then((hashedUniqueString) => {
+    .then(async (hashedUniqueString) => {
       const newEmailChange = new EmailChange({
         userID: userID,
         newEmail: newEmail,
@@ -1196,29 +1197,79 @@ const sendChangeEmailRequest = ({ userID, newEmail }, res) => {
         createdAt: Date.now(),
         expiresAt: Date.now() + 21600000,
       });
-      newEmailChange
-        .save()
-        .then(() => {
-          transporter
-            .sendMail(mailOptions)
-            .then(() => {
-              res.json({
-                status: "Pending",
-                message:
-                  "Verification email sent.Check your mailbox to verify new email",
-              });
+
+      //first check if there was a previous request
+      await EmailChange.find({
+        userID,
+      })
+
+        .then(async (response) => {
+          if (response.length > 0) {
+            //there were previous requests
+            await EmailChange.deleteMany({
+              userID,
             })
-            .catch((err) => {
-              res.json({
-                status: "Failed",
-                message: "Error occured sending verification email",
-              });
+            .then(() => {
+              newEmailChange
+                .save()
+                .then(() => {
+                  transporter
+                    .sendMail(mailOptions)
+                    .then(() => {
+                      res.json({
+                        status: "Pending",
+                        message:
+                          "Verification email sent.Check your mailbox to verify new email",
+                      });
+                    })
+                    .catch((err) => {
+                      res.json({
+                        status: "Failed",
+                        message: "Error occured sending verification email",
+                      });
+                    });
+                })
+                .catch((err) => {
+                  res.json({
+                    status: "Failed",
+                    message: "Couldn't save verification email data",
+                  });
+                });
             });
+          } else {
+            //noprevious req
+            newEmailChange
+              .save()
+              .then(() => {
+                transporter
+                  .sendMail(mailOptions)
+                  .then(() => {
+                    res.json({
+                      status: "Pending",
+                      message:
+                        "Verification email sent.Check your mailbox to verify new email",
+                    });
+                  })
+                  .catch((err) => {
+                    res.json({
+                      status: "Failed",
+                      message: "Error occured sending verification email",
+                    });
+                  });
+              })
+              .catch((err) => {
+                res.json({
+                  status: "Failed",
+                  message: "Couldn't save verification email data",
+                });
+              });
+          }
         })
         .catch((err) => {
+          console.log(err);
           res.json({
             status: "Failed",
-            message: "Couldn't save verification email data",
+            message: "Error occured checking email change records",
           });
         });
     })
