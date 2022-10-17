@@ -1416,7 +1416,6 @@ function access(req, res, next) {
       if (error) {
         console.log(error);
       } else {
-        console.log("Token generated successfully");
         req.access_token = JSON.parse(body).access_token;
         next();
       }
@@ -1432,8 +1431,6 @@ router.get("/access-token", access, (req, res) => {
 router.post("/join-premium/:id", access, async (req, res) => {
   const { phoneNumber } = req.body;
   const userID = req.params.id;
-
-  console.log(phoneNumber, "starting payment");
 
   //check if user exists
   await User.findOne({ _id: userID })
@@ -1476,7 +1473,6 @@ router.post("/join-premium/:id", access, async (req, res) => {
               console.log(error);
             } else {
               res.status(200).json(body);
-              console.log("STK initiated");
             }
           }
         );
@@ -1498,7 +1494,7 @@ router.post("/join-premium/:id", access, async (req, res) => {
 
 //callback
 router.post("/join-premium-response", (req, res) => {
-  console.log(req.body.Body.stkCallback.CallbackMetadata);
+  console.log(req.body.Body.stkCallback.CallbackMetadata.Item[0]);
 
   //Payment is successful
   if (req.body.Body.stkCallback.ResultCode == 0) {
