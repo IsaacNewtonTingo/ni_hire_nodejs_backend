@@ -1537,9 +1537,11 @@ const savePaymentToDB = async ({ amount, phoneNumber }) => {
             console.log(err);
           });
 
-        await User.updateOne({ _id: user, isFeatured: true }).catch((err) => {
-          console.log(err);
-        });
+        await User.updateOne({ _id: user }, { isFeatured: true }).catch(
+          (err) => {
+            console.log(err);
+          }
+        );
 
         const mailOptions = {
           from: process.env.AUTH_EMAIL,
