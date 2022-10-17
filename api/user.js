@@ -1510,6 +1510,8 @@ router.post("/join-premium-response", (req, res) => {
   }
 });
 
+//fjf
+
 const savePaymentToDB = async ({ amount, phoneNumber }) => {
   //find user with the phone number
   await User.findOne({ phoneNumber: phoneNumber })
