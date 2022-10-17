@@ -13,12 +13,13 @@ const datetime = require("node-datetime");
 const User = require("../models/user");
 const UserVerification = require("../models/user-verification");
 const PasswordReset = require("../models/password-reset");
+
 const { PromotedUser } = require("../models/promote-user");
 const { ServiceProvider } = require("../models/service-provider");
 const { ProfileVisit } = require("../models/profile-visits");
 const { BugReport } = require("../models/bug-report");
-const { route } = require("./service-provider");
 const { EmailChange } = require("../models/email-change");
+const { PremiumUser } = require("../models/premium-user");
 
 const currentUrl = "https://ni-hire-backend.herokuapp.com/";
 
@@ -1458,10 +1459,11 @@ router.post("/join-premium/:id", access, async (req, res) => {
               Timestamp: timestamp,
               TransactionType: "CustomerPayBillOnline",
               Amount: 1,
-              PartyA: 254724753175,
+              PartyA: phoneNumber,
               PartyB: 174379,
-              PhoneNumber: 254724753175,
-              CallBackURL: "https://ni-hire-backend.herokuapp.com/response",
+              PhoneNumber: phoneNumber,
+              CallBackURL:
+                "https://ni-hire-backend.herokuapp.com/join-premium-response",
               AccountReference: "CompanyXLTD",
               TransactionDesc: "Payment of X",
             },
@@ -1493,6 +1495,67 @@ router.post("/join-premium/:id", access, async (req, res) => {
 //callback
 router.post("/join-premium-response", (req, res) => {
   console.log(req.body.Body.stkCallback.CallbackMetadata);
+
+  //Payment is successful
+  if (req.body.Body.stkCallback.ResultCode == 0) {
+    //pass amount,phoneNumber to this function
+    const phoneNumber = req.body.Body.stkCallback.Msisdn;
+    const amount = req.body.Body.stkCallback.Amount;
+
+    savePaymentToDB({ phoneNumber, amount });
+  } else {
+    //Payment unsuccessfull
+    console.log("Cacelled");
+  }
 });
+
+const savePaymentToDB = async ({ amount, phoneNumber }) => {
+  //find user with the phone number
+  await User.findOne({ phoneNumber })
+    .then(async (response) => {
+      if (response) {
+        //user found
+        const user = response._id;
+
+        const newPremiumUser = new PremiumUser({
+          datePromoted: Date.now(),
+          dateExpiring: Date.now() + 604800000,
+          amount: amount,
+          user,
+        });
+
+        await newPremiumUser
+          .save()
+          .then((response) => {
+            console.log(response);
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+
+        const mailOptions = {
+          from: process.env.AUTH_EMAIL,
+          to: "newtontingo@gmail.com",
+          subject: "Premium user fee payment alert",
+          html: `<p><strong>${phoneNumber}</strong> has paid <strong>KSH. ${amount}</strong> as premium user fee at niHire mobile</p>`,
+        };
+
+        await transporter
+          .sendMail(mailOptions)
+          .then((response) => {
+            console.log(response);
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+      } else {
+        //no user
+        console.log("User not found");
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+};
 
 module.exports = router;

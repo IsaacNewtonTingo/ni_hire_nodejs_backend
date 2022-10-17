@@ -8,6 +8,7 @@ const PremiumUserSchema = new Schema({
   },
   datePromoted: Date,
   dateExpiring: Date,
+  amount: Number,
 });
 
-exports.PremiumUser = mongoose.Model("PremiumUser", PremiumUserSchema);
+exports.PremiumUser = mongoose.model("PremiumUser", PremiumUserSchema);
