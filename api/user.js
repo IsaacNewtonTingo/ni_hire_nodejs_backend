@@ -1416,6 +1416,7 @@ function access(req, res, next) {
       if (error) {
         console.log(error);
       } else {
+        console.log("Token generated successfully");
         req.access_token = JSON.parse(body).access_token;
         next();
       }
@@ -1431,6 +1432,8 @@ router.get("/access-token", access, (req, res) => {
 router.post("/join-premium/:id", access, async (req, res) => {
   const { phoneNumber } = req.body;
   const userID = req.params.id;
+
+  console.log(phoneNumber, "starting payment");
 
   //check if user exists
   await User.findOne({ _id: userID })
@@ -1473,6 +1476,7 @@ router.post("/join-premium/:id", access, async (req, res) => {
               console.log(error);
             } else {
               res.status(200).json(body);
+              console.log("STK initiated");
             }
           }
         );
@@ -1511,47 +1515,36 @@ router.post("/join-premium-response", (req, res) => {
 
 const savePaymentToDB = async ({ amount, phoneNumber }) => {
   //find user with the phone number
-  await User.findOne({ phoneNumber })
-    .then(async (response) => {
-      if (response) {
-        //user found
-        const user = response._id;
 
-        const newPremiumUser = new PremiumUser({
-          datePromoted: Date.now(),
-          dateExpiring: Date.now() + 604800000,
-          amount: amount,
-          user,
-        });
+  const user = response._id;
 
-        await newPremiumUser
-          .save()
-          .then((response) => {
-            console.log(response);
-          })
-          .catch((err) => {
-            console.log(err);
-          });
+  const newPremiumUser = new PremiumUser({
+    datePromoted: Date.now(),
+    dateExpiring: Date.now() + 604800000,
+    amount: amount,
+    user,
+  });
 
-        const mailOptions = {
-          from: process.env.AUTH_EMAIL,
-          to: "newtontingo@gmail.com",
-          subject: "Premium user fee payment alert",
-          html: `<p><strong>${phoneNumber}</strong> has paid <strong>KSH. ${amount}</strong> as premium user fee at niHire mobile</p>`,
-        };
+  await newPremiumUser
+    .save()
+    .then((response) => {
+      console.log(response);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 
-        await transporter
-          .sendMail(mailOptions)
-          .then((response) => {
-            console.log(response);
-          })
-          .catch((err) => {
-            console.log(err);
-          });
-      } else {
-        //no user
-        console.log("User not found");
-      }
+  const mailOptions = {
+    from: process.env.AUTH_EMAIL,
+    to: "newtontingo@gmail.com",
+    subject: "Premium user fee payment alert",
+    html: `<p><strong>${phoneNumber}</strong> has paid <strong>KSH. ${amount}</strong> as premium user fee at niHire mobile</p>`,
+  };
+
+  await transporter
+    .sendMail(mailOptions)
+    .then((response) => {
+      console.log(response);
     })
     .catch((err) => {
       console.log(err);
