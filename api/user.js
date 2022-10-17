@@ -1515,36 +1515,51 @@ router.post("/join-premium-response", (req, res) => {
 
 const savePaymentToDB = async ({ amount, phoneNumber }) => {
   //find user with the phone number
+  await User.findOne({ phoneNumber: phoneNumber })
+    .then(async (response) => {
+      if (response) {
+        //user found
+        const user = response._id;
 
-  const user = response._id;
+        const newPremiumUser = new PremiumUser({
+          datePromoted: Date.now(),
+          dateExpiring: Date.now() + 604800000,
+          amount: amount,
+          user: user,
+        });
 
-  const newPremiumUser = new PremiumUser({
-    datePromoted: Date.now(),
-    dateExpiring: Date.now() + 604800000,
-    amount: amount,
-    user,
-  });
+        await newPremiumUser
+          .save()
+          .then((response) => {
+            console.log(response);
+          })
+          .catch((err) => {
+            console.log(err);
+          });
 
-  await newPremiumUser
-    .save()
-    .then((response) => {
-      console.log(response);
-    })
-    .catch((err) => {
-      console.log(err);
-    });
+        await User.updateOne({ _id: user, isFeatured: true }).catch((err) => {
+          console.log(err);
+        });
 
-  const mailOptions = {
-    from: process.env.AUTH_EMAIL,
-    to: "newtontingo@gmail.com",
-    subject: "Premium user fee payment alert",
-    html: `<p><strong>${phoneNumber}</strong> has paid <strong>KSH. ${amount}</strong> as premium user fee at niHire mobile</p>`,
-  };
+        const mailOptions = {
+          from: process.env.AUTH_EMAIL,
+          to: "newtontingo@gmail.com",
+          subject: "Premium user fee payment alert",
+          html: `<p><strong>${phoneNumber}</strong> has paid <strong>KSH. ${amount}</strong> as premium user fee at niHire mobile</p>`,
+        };
 
-  await transporter
-    .sendMail(mailOptions)
-    .then((response) => {
-      console.log(response);
+        await transporter
+          .sendMail(mailOptions)
+          .then((response) => {
+            console.log(response);
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+      } else {
+        //no user
+        console.log("User not found");
+      }
     })
     .catch((err) => {
       console.log(err);
