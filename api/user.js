@@ -6,6 +6,9 @@ var nodemailer = require("nodemailer");
 const { v4: uuidv4 } = require("uuid");
 const path = require("path");
 const request = require("request");
+let unirest = require("unirest");
+
+const datetime = require("node-datetime");
 
 const User = require("../models/user");
 const UserVerification = require("../models/user-verification");
@@ -1382,6 +1385,114 @@ router.get("/change-email/:userID/:uniqueString", (req, res) => {
       let message = "An error occured whilechecking verified email";
       res.redirect(`/user/verified/?error=true&message=${message}`);
     });
+});
+
+//edit phone number
+router.post("/edit-phone-number/:id", async (req, res) => {
+  const { newNumber, password } = req.body;
+  const userID = req.params.id;
+
+  //check if user exists
+});
+
+const consumerKey = process.env.CONSUMER_KEY;
+const consumerSecret = process.env.CONSUMER_SECRET;
+
+function access(req, res, next) {
+  let url =
+    "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials";
+  let auth = new Buffer.from(consumerKey + ":" + consumerSecret).toString(
+    "base64"
+  );
+  request(
+    {
+      url: url,
+      headers: {
+        Authorization: "Basic " + auth,
+      },
+    },
+    (error, response, body) => {
+      if (error) {
+        console.log(error);
+      } else {
+        req.access_token = JSON.parse(body).access_token;
+        next();
+      }
+    }
+  );
+}
+
+router.get("/access-token", access, (req, res) => {
+  res.status(200).json({ access_token: req.access_token });
+});
+
+//join premium
+router.post("/join-premium/:id", access, async (req, res) => {
+  const { phoneNumber } = req.body;
+  const userID = req.params.id;
+
+  //check if user exists
+  await User.findOne({ _id: userID })
+    .then((response) => {
+      if (response) {
+        //user found
+        let auth = "Bearer " + req.access_token;
+        let datenow = datetime.create();
+        const timestamp = datenow.format("YmdHMS");
+
+        const password = new Buffer.from(
+          "174379" +
+            "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919" +
+            timestamp
+        ).toString("base64");
+        request(
+          {
+            url: "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
+            method: "POST",
+            headers: {
+              Authorization: auth,
+            },
+            json: {
+              BusinessShortCode: 174379,
+              Password: password,
+              Timestamp: timestamp,
+              TransactionType: "CustomerPayBillOnline",
+              Amount: 1,
+              PartyA: 254724753175,
+              PartyB: 174379,
+              PhoneNumber: 254724753175,
+              CallBackURL: "https://ni-hire-backend.herokuapp.com/response",
+              AccountReference: "CompanyXLTD",
+              TransactionDesc: "Payment of X",
+            },
+          },
+          function (error, response, body) {
+            if (error) {
+              console.log(error);
+            } else {
+              res.status(200).json(body);
+            }
+          }
+        );
+      } else {
+        //no user
+        res.json({
+          status: "Failed",
+          message: "User not found",
+        });
+      }
+    })
+    .catch((err) => {
+      res.json({
+        status: "Failed",
+        message: "Error occured while checking user records",
+      });
+    });
+});
+
+//callback
+router.post("/join-premium-response", (req, res) => {
+  console.log(req.body.Body.stkCallback.CallbackMetadata);
 });
 
 module.exports = router;
