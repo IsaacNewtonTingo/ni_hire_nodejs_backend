@@ -1466,7 +1466,7 @@ router.post("/join-premium/:id", access, async (req, res) => {
               PartyB: 174379,
               PhoneNumber: phoneNumber,
               CallBackURL:
-                "https://ni-hire-backend.herokuapp.com/join-premium-response",
+                "https://ni-hire-backend.herokuapp.com/user/join-premium-response",
               AccountReference: "CompanyXLTD",
               TransactionDesc: "Payment of X",
             },
