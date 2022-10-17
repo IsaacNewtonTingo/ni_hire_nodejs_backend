@@ -1494,13 +1494,14 @@ router.post("/join-premium/:id", access, async (req, res) => {
 
 //callback
 router.post("/join-premium-response", (req, res) => {
-  console.log(req.body.Body.stkCallback.CallbackMetadata.Item[0]);
+  console.log(req.body.Body.stkCallback.CallbackMetadata.Item[3].value);
 
   //Payment is successful
   if (req.body.Body.stkCallback.ResultCode == 0) {
     //pass amount,phoneNumber to this function
-    const phoneNumber = req.body.Body.stkCallback.Msisdn;
-    const amount = req.body.Body.stkCallback.Amount;
+    const phoneNumber =
+      req.body.Body.stkCallback.CallbackMetadata.Item[3].value;
+    const amount = req.body.Body.stkCallback.CallbackMetadata.Item[1].value;
 
     savePaymentToDB({ phoneNumber, amount });
   } else {
