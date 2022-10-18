@@ -1406,22 +1406,44 @@ router.post("/edit-phone-number/:id", async (req, res) => {
           .then(async (response) => {
             if (response) {
               //correct pass
-              //change phone number
-              await User.updateOne(
-                { _id: userID },
-                { phoneNumber: phoneNumber }
-              )
-                .then(() => {
-                  res.json({
-                    status: "Success",
-                    message: "Phone number updated successfully",
-                  });
+              //ensure no one has the new number
+
+              User.find({ phoneNumber })
+                .then(async (response) => {
+                  if (response.length > 0) {
+                    //number is registered
+                    res.json({
+                      status: "Failed",
+                      message: "Phone number already registered. Use another",
+                    });
+                  } else {
+                    //not registered
+                    //change phone number
+                    await User.updateOne(
+                      { _id: userID },
+                      { phoneNumber: phoneNumber }
+                    )
+                      .then(() => {
+                        res.json({
+                          status: "Success",
+                          message: "Phone number updated successfully",
+                        });
+                      })
+                      .catch((err) => {
+                        console.log(err);
+                        res.json({
+                          status: "Failed",
+                          message:
+                            "Error occured while updating user phone number",
+                        });
+                      });
+                  }
                 })
                 .catch((err) => {
                   console.log(err);
                   res.json({
                     status: "Failed",
-                    message: "Error occured while updating user phone number",
+                    message: "Error occured while checking existing records",
                   });
                 });
             } else {
@@ -1489,7 +1511,7 @@ router.get("/access-token", access, (req, res) => {
 
 //join premium
 router.post("/join-premium/:id", access, async (req, res) => {
-  const { phoneNumber } = req.body;
+  const { phoneNumber, password } = req.body;
   const userID = req.params.id;
 
   //check if user exists
@@ -1497,45 +1519,66 @@ router.post("/join-premium/:id", access, async (req, res) => {
     .then((response) => {
       if (response) {
         //user found
-        let auth = "Bearer " + req.access_token;
-        let datenow = datetime.create();
-        const timestamp = datenow.format("YmdHMS");
+        const hashedPassword = response.password;
+        bcrypt
+          .compare(password, hashedPassword)
+          .then((response) => {
+            if (response) {
+              //correct pass
+              let auth = "Bearer " + req.access_token;
+              let datenow = datetime.create();
+              const timestamp = datenow.format("YmdHMS");
 
-        const password = new Buffer.from(
-          "174379" +
-            "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919" +
-            timestamp
-        ).toString("base64");
-        request(
-          {
-            url: "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
-            method: "POST",
-            headers: {
-              Authorization: auth,
-            },
-            json: {
-              BusinessShortCode: 174379,
-              Password: password,
-              Timestamp: timestamp,
-              TransactionType: "CustomerPayBillOnline",
-              Amount: 1,
-              PartyA: phoneNumber,
-              PartyB: 174379,
-              PhoneNumber: phoneNumber,
-              CallBackURL:
-                "https://ni-hire-backend.herokuapp.com/user/join-premium-response",
-              AccountReference: "CompanyXLTD",
-              TransactionDesc: "Payment of X",
-            },
-          },
-          function (error, response, body) {
-            if (error) {
-              console.log(error);
+              const password = new Buffer.from(
+                "174379" +
+                  "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919" +
+                  timestamp
+              ).toString("base64");
+              request(
+                {
+                  url: "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
+                  method: "POST",
+                  headers: {
+                    Authorization: auth,
+                  },
+                  json: {
+                    BusinessShortCode: 174379,
+                    Password: password,
+                    Timestamp: timestamp,
+                    TransactionType: "CustomerPayBillOnline",
+                    Amount: 1,
+                    PartyA: phoneNumber,
+                    PartyB: 174379,
+                    PhoneNumber: phoneNumber,
+                    CallBackURL:
+                      "https://ni-hire-backend.herokuapp.com/user/join-premium-response",
+                    AccountReference: "CompanyXLTD",
+                    TransactionDesc: "Payment of X",
+                  },
+                },
+                function (error, response, body) {
+                  if (error) {
+                    console.log(error);
+                  } else {
+                    res.status(200).json(body);
+                  }
+                }
+              );
             } else {
-              res.status(200).json(body);
+              //wrong pass
+              res.json({
+                status: "Failed",
+                message: "Wrong password",
+              });
             }
-          }
-        );
+          })
+          .catch((err) => {
+            console.log(err);
+            res.json({
+              status: "Failed",
+              message: "Error occured whiles comparing passwords",
+            });
+          });
       } else {
         //no user
         res.json({
