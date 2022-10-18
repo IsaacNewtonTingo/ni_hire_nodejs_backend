@@ -1409,7 +1409,7 @@ function access(req, res, next) {
     {
       url: url,
       headers: {
-        Authorization: "Bearer " + auth,
+        Authorization: "Basic " + auth,
       },
     },
     (error, response, body) => {
