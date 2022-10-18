@@ -1643,6 +1643,13 @@ const savePaymentToDB = async ({ amount, phoneNumber }) => {
           }
         );
 
+        await ServiceProvider.updateMany(
+          { provider: user },
+          { isPromoted: true, datePromoted: Date.now() }
+        ).catch((err) => {
+          console.log(err);
+        });
+
         const mailOptions = {
           from: process.env.AUTH_EMAIL,
           to: "newtontingo@gmail.com",
