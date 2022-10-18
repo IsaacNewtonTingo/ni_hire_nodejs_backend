@@ -1390,10 +1390,70 @@ router.get("/change-email/:userID/:uniqueString", (req, res) => {
 
 //edit phone number
 router.post("/edit-phone-number/:id", async (req, res) => {
-  const { newNumber, password } = req.body;
+  const { phoneNumber, password } = req.body;
   const userID = req.params.id;
 
   //check if user exists
+
+  await User.findOne({ _id: userID })
+    .then((response) => {
+      if (response) {
+        //user exists
+        const hashedPassword = response.password;
+
+        bcrypt
+          .compare(password, hashedPassword)
+          .then(async (response) => {
+            if (response) {
+              //correct pass
+              //change phone number
+              await User.updateOne(
+                { _id: userID },
+                { phoneNumber: phoneNumber }
+              )
+                .then(() => {
+                  res.json({
+                    status: "Success",
+                    message: "Phone number updated successfully",
+                  });
+                })
+                .catch((err) => {
+                  console.log(err);
+                  res.json({
+                    status: "Failed",
+                    message: "Error occured while updating user phone number",
+                  });
+                });
+            } else {
+              //wrong password
+              res.json({
+                status: "Failed",
+                message: "Incorrect password",
+              });
+            }
+          })
+          .catch((err) => {
+            console.log(err);
+            res.json({
+              status: "Failed",
+              message: "Error occured while comparing passwords",
+            });
+          });
+      } else {
+        //user doesnt exist
+        res.json({
+          status: "Failed",
+          message: "User not found",
+        });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      res.json({
+        status: "Failed",
+        message: "Error occured while checking user records",
+      });
+    });
 });
 
 const consumerKey = process.env.CONSUMER_KEY;
