@@ -1409,7 +1409,7 @@ function access(req, res, next) {
     {
       url: url,
       headers: {
-        Authorization: "Basic " + auth,
+        Authorization: "Bearer " + auth,
       },
     },
     (error, response, body) => {
@@ -1509,8 +1509,6 @@ router.post("/join-premium-response", (req, res) => {
     console.log("Cacelled");
   }
 });
-
-//fjf
 
 const savePaymentToDB = async ({ amount, phoneNumber }) => {
   //find user with the phone number
