@@ -1615,6 +1615,8 @@ router.post("/join-premium-response", (req, res) => {
 
 const savePaymentToDB = async ({ amount, phoneNumber }) => {
   //find user with the phone number
+  console.log("Saving to db");
+  console.log(phoneNumber);
   await User.findOne({ phoneNumber: phoneNumber })
     .then(async (response) => {
       if (response) {
