@@ -1688,4 +1688,51 @@ const savePaymentToDB = async ({ amount, phoneNumber }) => {
     });
 };
 
+//get my previous transactions
+router.get("/get-my-premium-records/:id", async (req, res) => {
+  const userID = req.params.id;
+  //check if user exists
+  await User.findOne({ _id: userID })
+    .then(async (response) => {
+      if (response) {
+        //user found
+        //search for their data
+        await PremiumUser.find({ user: userID })
+          .populate("user")
+          .then((response) => {
+            if (response) {
+              //records found
+              res.send(response);
+            } else {
+              //No records
+              res.json({
+                status: "Failed",
+                message: "User has no premium records",
+              });
+            }
+          })
+          .catch((err) => {
+            console.log(err);
+            res.json({
+              status: "Failed",
+              message: "Error occured finding premium records",
+            });
+          });
+      } else {
+        //user not found
+        res.json({
+          status: "Failed",
+          message: "User not found",
+        });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      res.json({
+        status: "Failed",
+        message: "Error occured while checking existing user records",
+      });
+    });
+});
+
 module.exports = router;
