@@ -89,6 +89,7 @@ router.post("/add-service", async (req, res) => {
                         rating: 0,
                         isPromoted: false,
                         datePromoted: "",
+                        dateExpiring: "",
                         dateCreated: Date.now(),
                         provider,
                       });

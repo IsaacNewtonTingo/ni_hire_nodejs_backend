@@ -14,6 +14,7 @@ const UserSchema = new Schema({
   isFeatured: Boolean,
   generalPromotedTitle: String,
   dateFeatured: Date,
+  dateExpiring: Date,
 });
 
 const User = mongoose.model("User", UserSchema);

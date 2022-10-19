@@ -1641,15 +1641,24 @@ const savePaymentToDB = async ({ amount, phoneNumber }) => {
             console.log(err);
           });
 
-        await User.updateOne({ _id: user }, { isFeatured: true }).catch(
-          (err) => {
-            console.log(err);
+        await User.updateOne(
+          { _id: user },
+          {
+            isFeatured: true,
+            dateFeatured: Date.now(),
+            dateExpiring: Date.now() + 604800000,
           }
-        );
+        ).catch((err) => {
+          console.log(err);
+        });
 
         await ServiceProvider.updateMany(
           { provider: user },
-          { isPromoted: true, datePromoted: Date.now() }
+          {
+            isPromoted: true,
+            datePromoted: Date.now(),
+            dateExpiring: Date.now() + 604800000,
+          }
         ).catch((err) => {
           console.log(err);
         });

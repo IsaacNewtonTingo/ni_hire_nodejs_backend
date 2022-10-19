@@ -14,6 +14,7 @@ const ServiceProviderSchema = new Schema({
   rating: Number,
   isPromoted: Boolean,
   datePromoted: Date,
+  dateExpiring: Date,
   dateCreated: Date,
 
   provider: {

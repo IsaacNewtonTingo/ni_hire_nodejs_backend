@@ -14,6 +14,7 @@ app.listen(PORT, () => {
 });
 
 require("./config/db");
+require("./api/auto-update-records");
 
 const UserRouter = require("./api/user");
 const CategoryRouter = require("./api/category");
