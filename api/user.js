@@ -1698,7 +1698,6 @@ router.get("/get-my-premium-records/:id", async (req, res) => {
         //user found
         //search for their data
         await PremiumUser.find({ user: userID })
-          .populate("user")
           .then((response) => {
             if (response) {
               //records found
