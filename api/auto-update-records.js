@@ -8,10 +8,10 @@ User.updateMany(
   .then((response) => {
     if (response.modifiedCount > 0) {
       //found some records and updated
-      console.log("Outdated records found");
+      console.log("Expired premium users found and updated");
     } else {
       //no records found
-      console.log("No outdated records found");
+      console.log("No expired premium user records found");
     }
   })
   .catch((err) => {
@@ -25,10 +25,10 @@ ServiceProvider.updateMany(
   .then((response) => {
     if (response.modifiedCount > 0) {
       //found some records and updated
-      console.log("Outdated records found and edited");
+      console.log("Epired premium service provider records found and edited");
     } else {
       //no records found
-      console.log("No outdated records found");
+      console.log("No expired premium service provider records found");
     }
   })
   .catch((err) => {
