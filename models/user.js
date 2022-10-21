@@ -12,10 +12,7 @@ const UserSchema = new Schema({
   password: String,
   verified: Boolean,
   isFeatured: Boolean,
-  generalPromotedTitle: {
-    type: String,
-    required: true,
-  },
+  generalPromotedTitle: String,
   dateFeatured: Date,
   dateExpiring: Date,
 });

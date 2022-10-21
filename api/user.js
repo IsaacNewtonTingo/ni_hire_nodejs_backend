@@ -87,7 +87,9 @@ router.post("/signup", async (req, res) => {
                 location: "",
                 profilePicture: "",
                 isFeatured: false,
-                generalPromotedTitle: generalPromotedTitle,
+                generalPromotedTitle: generalPromotedTitle
+                  ? generalPromotedTitle
+                  : "",
                 dateFeatured: "",
               });
               newUser
