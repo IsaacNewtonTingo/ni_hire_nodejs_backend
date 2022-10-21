@@ -62,8 +62,10 @@ router.post("/add-service", async (req, res) => {
   } else {
     //check if user exists
     await User.findOne({ _id: provider })
-      .then(async (response) => {
-        if (response) {
+      .then(async (userResponse) => {
+        if (userResponse) {
+          const isUserPremium = userResponse.isFeatured;
+
           //check if category is valid
           await Category.findOne({ _id: category })
             .then(async (response) => {
@@ -87,7 +89,7 @@ router.post("/add-service", async (req, res) => {
                         rate,
                         // rate: parseInt(rate.replace(/,/g, "")),
                         rating: 0,
-                        isPromoted: false,
+                        isPromoted: isUserPremium,
                         datePromoted: "",
                         dateExpiring: "",
                         dateCreated: Date.now(),
