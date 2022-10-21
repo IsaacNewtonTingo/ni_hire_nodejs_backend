@@ -644,6 +644,7 @@ router.put("/update-profile/:id", async (req, res) => {
                     profilePicture: req.body.profilePicture,
                     bio: req.body.bio,
                     location: req.body.location,
+                    generalPromotedTitle: req.body.generalPromotedTitle,
                   },
                   {
                     new: true,
