@@ -13,6 +13,7 @@ const UserSchema = new Schema({
   verified: Boolean,
   isFeatured: Boolean,
   generalPromotedTitle: {
+    type: String,
     required: true,
   },
   dateFeatured: Date,
