@@ -429,15 +429,15 @@ const sendResetEmail = ({ _id, email }, redirectUrl, res) => {
 };
 
 router.post("/reset-password", (req, res) => {
-  let { userId, resetString, newPassword } = req.body;
-  PasswordReset.find({ userId })
+  let { userID, resetString, newPassword } = req.body;
+  PasswordReset.find({ userID })
     .then((result) => {
       if (result.length > 0) {
         const { expiresAt } = result[0];
         const hashedResetString = result[0].resetString;
 
         if (expiresAt < Date.now()) {
-          PasswordReset.deleteOne({ userId })
+          PasswordReset.deleteOne({ userID })
             .then(() => {
               res.json({
                 status: "Failed",
@@ -461,11 +461,11 @@ router.post("/reset-password", (req, res) => {
                   .hash(newPassword, saltRounds)
                   .then((hashedNewPassword) => {
                     User.updateOne(
-                      { _id: userId },
+                      { _id: userID },
                       { password: hashedNewPassword }
                     )
                       .then(() => {
-                        PasswordReset.deleteOne({ userId })
+                        PasswordReset.deleteOne({ userID })
                           .then(() => {
                             res.json({
                               status: "Success",
