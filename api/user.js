@@ -361,7 +361,7 @@ router.post("/request-password-reset", (req, res) => {
 });
 
 const sendResetEmail = ({ _id, email }, redirectUrl, res) => {
-  const resetString = uuidv4() + _id;
+  const resetString = Math.floor(1000 + Math.random() * 9000).toString();
 
   PasswordReset.deleteMany({ userId: _id })
     .then((result) => {
@@ -413,6 +413,7 @@ const sendResetEmail = ({ _id, email }, redirectUrl, res) => {
             });
         })
         .catch((err) => {
+          console.log(err);
           res.json({
             status: "Failed",
             message: "Error while hashing password reset data",
