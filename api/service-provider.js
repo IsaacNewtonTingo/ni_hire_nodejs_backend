@@ -23,7 +23,7 @@ let transporter = nodemailer.createTransport({
 
 //post service
 router.post("/add-service", async (req, res) => {
-  const {
+  let {
     service,
     category,
     description,
@@ -33,6 +33,15 @@ router.post("/add-service", async (req, res) => {
     rate,
     provider,
   } = req.body;
+
+  service = service.trim();
+  category = category.trim();
+  description = description.trim();
+  image1 = image1.trim();
+  image2 = image2.trim();
+  image3 = image3.trim();
+  rate = rate.toString().trim();
+  provider = provider.trim();
 
   if (!service) {
     res.json({
@@ -86,8 +95,7 @@ router.post("/add-service", async (req, res) => {
                         image1,
                         image2,
                         image3,
-                        rate,
-                        // rate: parseInt(rate.replace(/,/g, "")),
+                        rate: parseInt(rate),
                         rating: 0,
                         isPromoted: isUserPremium,
                         datePromoted: "",
@@ -507,7 +515,11 @@ router.get("/get-featured", async (req, res) => {
 
 //Add to viewed by
 router.post("/add-viewed-by", async (req, res) => {
-  const { serviceProviderID, userID } = req.body;
+  let { serviceProviderID, userID } = req.body;
+
+  serviceProviderID = serviceProviderID.trim();
+  userID = userID.trim();
+
   if (!serviceProviderID) {
     res.json({
       status: "Failed",
@@ -636,7 +648,11 @@ router.post("/add-viewed-by", async (req, res) => {
 
 //Add to saved by
 router.post("/save-service", async (req, res) => {
-  const { serviceProviderID, userID } = req.body;
+  let { serviceProviderID, userID } = req.body;
+
+  serviceProviderID = serviceProviderID.trim();
+  userID = userID.trim();
+
   if (!serviceProviderID) {
     res.json({
       status: "Failed",
@@ -1178,8 +1194,12 @@ router.get("/get-my-services/:id", async (req, res) => {
 
 //add review
 router.post("/add-review/:id", async (req, res) => {
-  const { userID, reviewMessage, rating } = req.body;
+  let { userID, reviewMessage, rating } = req.body;
   const serviceProviderID = req.params.id;
+
+  userID = userID.trim();
+  reviewMessage = reviewMessage.trim();
+  rating = rating.trim();
 
   //check if user exists
   await User.findOne({ _id: userID })
@@ -1424,7 +1444,11 @@ router.delete("/delete-review/:id", async (req, res) => {
 //edit service
 router.put("/edit-service-provider/:id", async (req, res) => {
   const serviceProviderID = req.params.id;
-  const { userID, providerID } = req.body;
+  let { userID, providerID } = req.body;
+
+  userID = userID.trim();
+  providerID = providerID.trim();
+
   const filter = {
     _id: serviceProviderID,
   };
@@ -1766,9 +1790,12 @@ router.delete("/delete-service-provider/:id", async (req, res) => {
 
 //promote servie
 router.post("/promote-service/:id", async (req, res) => {
-  const { phoneNumber, userID } = req.body;
+  let { phoneNumber, userID } = req.body;
   const serviceProviderID = req.params.id;
   const amount = 1;
+
+  phoneNumber = phoneNumber.toString().trim();
+  userID = userID.trim();
 
   //check if service exists
   await ServiceProvider.findOne({ _id: serviceProviderID })
@@ -1796,7 +1823,7 @@ router.post("/promote-service/:id", async (req, res) => {
                 "amount=" +
                 amount +
                 "&msisdn=" +
-                phoneNumber +
+                parseInt(phoneNumber) +
                 "&account_no=200",
             },
             function (error, response, body) {

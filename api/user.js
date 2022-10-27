@@ -42,6 +42,15 @@ router.post("/signup", async (req, res) => {
     generalPromotedTitle,
   } = req.body;
 
+  firstName = firstName.trim();
+  lastName = lastName.trim();
+  email = email.trim();
+  phoneNumber = phoneNumber.toString().trim();
+  password = password.trim();
+  generalPromotedTitle = generalPromotedTitle
+    ? generalPromotedTitle.trim()
+    : "";
+
   if (!firstName || !lastName || !email || !phoneNumber || !password) {
     res.json({
       status: "Failed",
@@ -79,7 +88,7 @@ router.post("/signup", async (req, res) => {
                 firstName,
                 lastName,
                 email,
-                phoneNumber,
+                phoneNumber: parseInt(phoneNumber),
                 password: hashedPassword,
                 verified: false,
 
@@ -106,6 +115,7 @@ router.post("/signup", async (req, res) => {
                 });
             })
             .catch((err) => {
+              console.log(err);
               res.json({
                 status: "Failed",
                 message: "Error occured while hashing password",
@@ -114,9 +124,10 @@ router.post("/signup", async (req, res) => {
         }
       })
       .catch((err) => {
+        console.log(err);
         res.json({
           status: "Failed",
-          message: "Erro occured when checking email and phoneNumber",
+          message: "Error occured when checking email and phoneNumber",
         });
       });
   }
@@ -266,6 +277,8 @@ router.get("/verified", (req, res) => {
 router.post("/signin", (req, res) => {
   console.log("Connected");
   let { email, password } = req.body;
+  email = email.trim();
+  password = password.trim();
 
   if (!email || !password) {
     res.json({
@@ -426,8 +439,13 @@ const sendResetEmail = ({ _id, email }, redirectUrl, res) => {
     });
 };
 
+//reset password
 router.post("/reset-password", (req, res) => {
   let { userId, resetString, newPassword } = req.body;
+  userId = userId.trim();
+  resetString = resetString.trim();
+  newPassword = newPassword.trim();
+
   PasswordReset.find({ userId })
     .then((result) => {
       if (result.length > 0) {
@@ -615,8 +633,11 @@ router.get("/get-user-data/:id", async (req, res) => {
 //edit profile
 router.put("/update-profile/:id", async (req, res) => {
   const userID = req.params.id;
-  const { password, email } = req.body;
+  let { password, email } = req.body;
   const filter = { _id: userID };
+
+  password = password.trim();
+  email = email.trim();
 
   //validate user
   if (!email || !password) {
@@ -697,7 +718,9 @@ router.put("/update-profile/:id", async (req, res) => {
 //delete my reviews
 router.delete("/delete-profile/:id", async (req, res) => {
   const userID = req.params.id;
-  const { password } = req.body;
+  let { password } = req.body;
+
+  password = password.trim();
 
   //check if user exists
   await User.findOne({ _id: userID })
@@ -778,13 +801,15 @@ router.delete("/delete-profile/:id", async (req, res) => {
 
 //promote profile
 router.post("/promote-profile/:id", async (req, res) => {
-  const { phoneNumber } = req.body;
+  let { phoneNumber } = req.body;
   const userID = req.params.id;
   const amount = 1;
 
+  phoneNumber = phoneNumber.toString().trim();
+
   //check if user with id and phonenumber exists
   await User.findOne({
-    $and: [{ _id: userID }, { phoneNumber: phoneNumber }],
+    $and: [{ _id: userID }, { phoneNumber: parseInt(phoneNumber) }],
   })
     .then((response) => {
       if (response) {
@@ -800,7 +825,11 @@ router.post("/promote-profile/:id", async (req, res) => {
               "Content-Type": "application/x-www-form-urlencoded",
             },
             body:
-              "amount=" + amount + "&msisdn=" + phoneNumber + "&account_no=200",
+              "amount=" +
+              amount +
+              "&msisdn=" +
+              parseInt(phoneNumber) +
+              "&account_no=200",
           },
           function (error, response, body) {
             if (error) {
@@ -1062,7 +1091,9 @@ router.get("/get-profile-visits/:id", async (req, res) => {
 //Bug report
 router.post("/bug-report/:id", async (req, res) => {
   const userID = req.params.id;
-  const { message } = req.body;
+  let { message } = req.body;
+
+  message = message.trim();
 
   //check if user exists
   await User.findOne({ _id: userID })
@@ -1140,7 +1171,10 @@ router.post("/bug-report/:id", async (req, res) => {
 //edit email
 router.post("/edit-email/:id", async (req, res) => {
   const userID = req.params.id;
-  const { newEmail, password } = req.body;
+  let { newEmail, password } = req.body;
+
+  newEmail = newEmail.trim();
+  password = password.trim();
 
   //check if user exists
   await User.findOne({ _id: userID })
@@ -1519,8 +1553,11 @@ router.get("/access-token", access, (req, res) => {
 
 //join premium
 router.post("/join-premium/:id", access, async (req, res) => {
-  const { phoneNumber, password } = req.body;
+  let { phoneNumber, password } = req.body;
   const userID = req.params.id;
+
+  phoneNumber = phoneNumber.toString().trim();
+  password = password.trim();
 
   //check if user exists
   await User.findOne({ _id: userID })
@@ -1555,9 +1592,9 @@ router.post("/join-premium/:id", access, async (req, res) => {
                     Timestamp: timestamp,
                     TransactionType: "CustomerPayBillOnline",
                     Amount: 1,
-                    PartyA: phoneNumber,
+                    PartyA: parseInt(phoneNumber),
                     PartyB: 174379,
-                    PhoneNumber: phoneNumber,
+                    PhoneNumber: parseInt(phoneNumber),
                     CallBackURL:
                       "https://ni-hire-backend.herokuapp.com/user/join-premium-response",
                     AccountReference: "CompanyXLTD",
@@ -1740,67 +1777,6 @@ router.get("/get-my-premium-records/:id", async (req, res) => {
         message: "Error occured while checking existing user records",
       });
     });
-});
-
-router.post("/make-payment", access, async (req, res) => {
-  const phoneNumber = 254724753175;
-
-  let auth = "Bearer " + req.access_token;
-  let datenow = datetime.create();
-  const timestamp = datenow.format("YmdHMS");
-
-  const password = new Buffer.from(
-    "174379" +
-      "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919" +
-      timestamp
-  ).toString("base64");
-  request(
-    {
-      url: "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
-      method: "POST",
-      headers: {
-        Authorization: auth,
-      },
-      json: {
-        BusinessShortCode: 174379,
-        Password: password,
-        Timestamp: timestamp,
-        TransactionType: "CustomerPayBillOnline",
-        Amount: 1,
-        PartyA: phoneNumber,
-        PartyB: 174379,
-        PhoneNumber: phoneNumber,
-        CallBackURL: "https://ni-hire-backend.herokuapp.com/user/test-response",
-        AccountReference: "CompanyXLTD",
-        TransactionDesc: "Payment of X",
-      },
-    },
-    function (error, response, body) {
-      if (error) {
-        console.log(error);
-      } else {
-        res.status(200).json(body);
-      }
-    }
-  );
-});
-
-//callback
-router.post("/test-response", (req, res) => {
-  console.log(req.body.Body.stkCallback.CallbackMetadata.Item[3].Value);
-
-  //Payment is successful
-  if (req.body.Body.stkCallback.ResultCode == 0) {
-    //pass amount,phoneNumber to this function
-    const phoneNumber =
-      req.body.Body.stkCallback.CallbackMetadata.Item[3].Value;
-    const amount = req.body.Body.stkCallback.CallbackMetadata.Item[0].Value;
-
-    console.log(req.body.Body.stkCallback.CallbackMetadata);
-  } else {
-    //Payment unsuccessfull
-    console.log("Cacelled");
-  }
 });
 
 module.exports = router;
