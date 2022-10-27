@@ -1539,7 +1539,7 @@ router.delete("/delete-service-provider/:id", async (req, res) => {
                                             res.json({
                                               status: "Success",
                                               message:
-                                                "Service,rreviews,recent views,saved deleted",
+                                                "Service deleted successfully",
                                             });
                                           })
                                           .catch((err) => {
@@ -1555,7 +1555,7 @@ router.delete("/delete-service-provider/:id", async (req, res) => {
                                         res.json({
                                           status: "Success",
                                           message:
-                                            "Service,reviews,recent views deleted but had not been saved",
+                                            "Service deleted successfully",
                                         });
                                       }
                                     })
@@ -1592,7 +1592,7 @@ router.delete("/delete-service-provider/:id", async (req, res) => {
                                         res.json({
                                           status: "Success",
                                           message:
-                                            "Service,reviews,saved deleted",
+                                            "Service deleted successfully",
                                         });
                                       })
                                       .catch((err) => {
@@ -1607,8 +1607,7 @@ router.delete("/delete-service-provider/:id", async (req, res) => {
                                     //not saved
                                     res.json({
                                       status: "Success",
-                                      message:
-                                        "Service,reviews,deleted but had not been saved",
+                                      message: "Service deleted successfully",
                                     });
                                   }
                                 })
@@ -1665,7 +1664,7 @@ router.delete("/delete-service-provider/:id", async (req, res) => {
                                         res.json({
                                           status: "Success",
                                           message:
-                                            "Service,rreviews,recent views,saved deleted",
+                                            "Service deleted successfully",
                                         });
                                       })
                                       .catch((err) => {
@@ -1680,8 +1679,7 @@ router.delete("/delete-service-provider/:id", async (req, res) => {
                                     //not saved
                                     res.json({
                                       status: "Success",
-                                      message:
-                                        "Service,reviews,recent views deleted but had not been saved",
+                                      message: "Service deleted successfully",
                                     });
                                   }
                                 })
@@ -1715,8 +1713,7 @@ router.delete("/delete-service-provider/:id", async (req, res) => {
                                   .then(() => {
                                     res.json({
                                       status: "Success",
-                                      message:
-                                        "Service,rreviews,recent views,saved deleted",
+                                      message: "Service deleted successfully",
                                     });
                                   })
                                   .catch((err) => {
@@ -1731,8 +1728,7 @@ router.delete("/delete-service-provider/:id", async (req, res) => {
                                 //not saved
                                 res.json({
                                   status: "Success",
-                                  message:
-                                    "Service,reviews,recent views deleted but had not been saved",
+                                  message: "Service deleted successfully",
                                 });
                               }
                             })
