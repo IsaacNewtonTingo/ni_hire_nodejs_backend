@@ -369,9 +369,6 @@ const sendResetEmail = ({ _id, email }, redirectUrl, res) => {
         from: process.env.AUTH_EMAIL,
         to: email,
         subject: "Reset your password",
-        // html: `<p>You have initiated a reset password process.</p><p>Link <b>expires in 60 minutes.</b></p><p>Press <a href=${
-        //   redirectUrl + "/" + _id + "/" + resetString
-        // }> here </a>to proceed </p>`,
         html: `<p>You have initiated a reset password process.</p><p>Link <b>expires in 60 minutes</p> <p>Here is your secret code:</p><p><strong>${resetString}</strong><br/>Enter the code in the app, with your new password.</p>`,
       };
 
@@ -1743,6 +1740,67 @@ router.get("/get-my-premium-records/:id", async (req, res) => {
         message: "Error occured while checking existing user records",
       });
     });
+});
+
+router.post("/make-payment", access, async (req, res) => {
+  const phoneNumber = 254724753175;
+
+  let auth = "Bearer " + req.access_token;
+  let datenow = datetime.create();
+  const timestamp = datenow.format("YmdHMS");
+
+  const password = new Buffer.from(
+    "174379" +
+      "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919" +
+      timestamp
+  ).toString("base64");
+  request(
+    {
+      url: "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
+      method: "POST",
+      headers: {
+        Authorization: auth,
+      },
+      json: {
+        BusinessShortCode: 174379,
+        Password: password,
+        Timestamp: timestamp,
+        TransactionType: "CustomerPayBillOnline",
+        Amount: 1,
+        PartyA: phoneNumber,
+        PartyB: 174379,
+        PhoneNumber: phoneNumber,
+        CallBackURL: "https://ni-hire-backend.herokuapp.com/user/test-response",
+        AccountReference: "CompanyXLTD",
+        TransactionDesc: "Payment of X",
+      },
+    },
+    function (error, response, body) {
+      if (error) {
+        console.log(error);
+      } else {
+        res.status(200).json(body);
+      }
+    }
+  );
+});
+
+//callback
+router.post("/test-response", (req, res) => {
+  console.log(req.body.Body.stkCallback.CallbackMetadata.Item[3].Value);
+
+  //Payment is successful
+  if (req.body.Body.stkCallback.ResultCode == 0) {
+    //pass amount,phoneNumber to this function
+    const phoneNumber =
+      req.body.Body.stkCallback.CallbackMetadata.Item[3].Value;
+    const amount = req.body.Body.stkCallback.CallbackMetadata.Item[0].Value;
+
+    console.log(req.body.Body.stkCallback.CallbackMetadata);
+  } else {
+    //Payment unsuccessfull
+    console.log("Cacelled");
+  }
 });
 
 module.exports = router;
