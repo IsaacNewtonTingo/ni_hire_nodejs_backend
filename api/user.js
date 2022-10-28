@@ -1752,7 +1752,9 @@ router.post("/join-premium/:id", access, async (req, res) => {
           .then((response) => {
             if (response) {
               const amount = 1;
-              const body = `amount=${amount}&msisdn=${phoneNumber}&account_no=${accountNumber}`;
+              const body = `amount=${amount}&msisdn=${parseInt(
+                phoneNumber
+              )}&account_no=${accountNumber}`;
 
               request(
                 {
