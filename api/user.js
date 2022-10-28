@@ -1751,7 +1751,7 @@ router.post("/join-premium/:id", access, async (req, res) => {
           .compare(password, hashedPassword)
           .then((response) => {
             if (response) {
-              const amount = 1;
+              const amount = 200;
               const body = `amount=${amount}&msisdn=${parseInt(
                 phoneNumber
               )}&account_no=${accountNumber}`;
