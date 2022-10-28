@@ -1808,22 +1808,22 @@ router.post("/join-premium/:id", access, async (req, res) => {
 
 //callback
 router.post("/join-premium-response", (req, res) => {
-  console.log(req.body.Body.stkCallback.CallbackMetadata.Item[3].Value);
+  console.log(req.body.Body);
 
-  //Payment is successful
-  if (req.body.Body.stkCallback.ResultCode == 0) {
-    //pass amount,phoneNumber to this function
-    const phoneNumber =
-      req.body.Body.stkCallback.CallbackMetadata.Item[3].Value;
-    const amount = req.body.Body.stkCallback.CallbackMetadata.Item[0].Value;
+  // //Payment is successful
+  // if (req.body.Body.stkCallback.ResultCode == 0) {
+  //   //pass amount,phoneNumber to this function
+  //   const phoneNumber =
+  //     req.body.Body.stkCallback.CallbackMetadata.Item[3].Value;
+  //   const amount = req.body.Body.stkCallback.CallbackMetadata.Item[0].Value;
 
-    console.log(req.body.Body.stkCallback.CallbackMetadata);
+  //   console.log(req.body.Body.stkCallback.CallbackMetadata);
 
-    savePaymentToDB({ phoneNumber, amount });
-  } else {
-    //Payment unsuccessfull
-    console.log("Cacelled");
-  }
+  //   savePaymentToDB({ phoneNumber, amount });
+  // } else {
+  //   //Payment unsuccessfull
+  //   console.log("Cacelled");
+  // }
 });
 
 const savePaymentToDB = async ({ amount, phoneNumber }) => {
