@@ -1773,7 +1773,7 @@ router.post("/join-premium/:id", access, async (req, res) => {
                     const sendRes = JSON.parse(body);
                     console.log(sendRes);
 
-                    if (sendRes.success == true) {
+                    if (sendRes.success === true) {
                       res.json({
                         status: "Success",
                         ResponseDescription:
