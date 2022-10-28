@@ -1771,8 +1771,21 @@ router.post("/join-premium/:id", access, async (req, res) => {
                     console.log(error);
                   } else {
                     const sendRes = JSON.parse(body);
-                    res.send(sendRes);
                     console.log(sendRes);
+
+                    if (sendRes.success == true) {
+                      res.json({
+                        status: "Success",
+                        ResponseDescription:
+                          "Success. Request accepted for processing",
+                      });
+                    } else {
+                      res.json({
+                        status: "Error",
+                        ResponseDescription:
+                          "An error occured. Please try again later",
+                      });
+                    }
                   }
                 }
               );
