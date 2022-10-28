@@ -1758,7 +1758,7 @@ router.post("/join-premium/:id", access, async (req, res) => {
 
               request(
                 {
-                  url: "https://tinypesa.com/api/v1/express/initialize?https://ni-hire-backend.herokuapp.com/user/join-premium-response",
+                  url: "https://tinypesa.com/api/v1/express/initialize",
                   method: "POST",
                   headers: {
                     Apikey: process.env.NEWTON_TINY_PESA_API_KEY,
