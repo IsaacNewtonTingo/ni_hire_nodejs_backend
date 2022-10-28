@@ -659,7 +659,6 @@ router.put("/update-profile/:id", async (req, res) => {
                   {
                     firstName: req.body.firstName,
                     lastName: req.body.lastName,
-                    phoneNumber: req.body.phoneNumber,
                     profilePicture: req.body.profilePicture,
                     bio: req.body.bio,
                     location: req.body.location,
@@ -1551,9 +1550,192 @@ router.get("/access-token", access, (req, res) => {
   res.status(200).json({ access_token: req.access_token });
 });
 
+// //join premium
+// router.post("/join-premium/:id", access, async (req, res) => {
+//   let { phoneNumber, password } = req.body;
+//   const userID = req.params.id;
+
+//   phoneNumber = phoneNumber.toString().trim();
+//   password = password.trim();
+
+//   //check if user exists
+//   await User.findOne({ _id: userID })
+//     .then((response) => {
+//       if (response) {
+//         //user found
+//         const hashedPassword = response.password;
+//         bcrypt
+//           .compare(password, hashedPassword)
+//           .then((response) => {
+//             if (response) {
+//               //correct pass
+//               let auth = "Bearer " + req.access_token;
+//               let datenow = datetime.create();
+//               const timestamp = datenow.format("YmdHMS");
+
+//               const password = new Buffer.from(
+//                 "174379" +
+//                   "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919" +
+//                   timestamp
+//               ).toString("base64");
+//               request(
+//                 {
+//                   url: "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
+//                   method: "POST",
+//                   headers: {
+//                     Authorization: auth,
+//                   },
+//                   json: {
+//                     BusinessShortCode: 174379,
+//                     Password: password,
+//                     Timestamp: timestamp,
+//                     TransactionType: "CustomerPayBillOnline",
+//                     Amount: 1,
+//                     PartyA: parseInt(phoneNumber),
+//                     PartyB: 174379,
+//                     PhoneNumber: parseInt(phoneNumber),
+//                     CallBackURL:
+//                       "https://ni-hire-backend.herokuapp.com/user/join-premium-response",
+//                     AccountReference: "CompanyXLTD",
+//                     TransactionDesc: "Payment of X",
+//                   },
+//                 },
+//                 function (error, response, body) {
+//                   if (error) {
+//                     console.log(error);
+//                   } else {
+//                     res.status(200).json(body);
+//                   }
+//                 }
+//               );
+//             } else {
+//               //wrong pass
+//               res.json({
+//                 status: "Failed",
+//                 message: "Wrong password",
+//               });
+//             }
+//           })
+//           .catch((err) => {
+//             console.log(err);
+//             res.json({
+//               status: "Failed",
+//               message: "Error occured whiles comparing passwords",
+//             });
+//           });
+//       } else {
+//         //no user
+//         res.json({
+//           status: "Failed",
+//           message: "User not found",
+//         });
+//       }
+//     })
+//     .catch((err) => {
+//       res.json({
+//         status: "Failed",
+//         message: "Error occured while checking user records",
+//       });
+//     });
+// });
+
+// //callback
+// router.post("/join-premium-response", (req, res) => {
+//   console.log(req.body.Body.stkCallback.CallbackMetadata.Item[3].Value);
+
+//   //Payment is successful
+//   if (req.body.Body.stkCallback.ResultCode == 0) {
+//     //pass amount,phoneNumber to this function
+//     const phoneNumber =
+//       req.body.Body.stkCallback.CallbackMetadata.Item[3].Value;
+//     const amount = req.body.Body.stkCallback.CallbackMetadata.Item[0].Value;
+
+//     console.log(req.body.Body.stkCallback.CallbackMetadata);
+
+//     savePaymentToDB({ phoneNumber, amount });
+//   } else {
+//     //Payment unsuccessfull
+//     console.log("Cacelled");
+//   }
+// });
+
+// const savePaymentToDB = async ({ amount, phoneNumber }) => {
+//   //find user with the phone number
+//   console.log("Saving to db");
+//   console.log(phoneNumber);
+//   await User.findOne({ phoneNumber: phoneNumber })
+//     .then(async (response) => {
+//       if (response) {
+//         //user found
+//         const user = response._id;
+
+//         const newPremiumUser = new PremiumUser({
+//           datePromoted: Date.now(),
+//           dateExpiring: Date.now() + 604800000,
+//           amount: amount,
+//           user: user,
+//         });
+
+//         await newPremiumUser
+//           .save()
+//           .then((response) => {
+//             console.log(response);
+//           })
+//           .catch((err) => {
+//             console.log(err);
+//           });
+
+//         await User.updateOne(
+//           { _id: user },
+//           {
+//             isFeatured: true,
+//             dateFeatured: Date.now(),
+//             dateExpiring: Date.now() + 604800000,
+//           }
+//         ).catch((err) => {
+//           console.log(err);
+//         });
+
+//         await ServiceProvider.updateMany(
+//           { provider: user },
+//           {
+//             isPromoted: true,
+//             datePromoted: Date.now(),
+//             dateExpiring: Date.now() + 604800000,
+//           }
+//         ).catch((err) => {
+//           console.log(err);
+//         });
+
+//         const mailOptions = {
+//           from: process.env.AUTH_EMAIL,
+//           to: "newtontingo@gmail.com",
+//           subject: "Premium user fee payment alert",
+//           html: `<p><strong>${phoneNumber}</strong> has paid <strong>KSH. ${amount}</strong> as premium user fee at niHire mobile</p>`,
+//         };
+
+//         await transporter
+//           .sendMail(mailOptions)
+//           .then((response) => {
+//             console.log(response);
+//           })
+//           .catch((err) => {
+//             console.log(err);
+//           });
+//       } else {
+//         //no user
+//         console.log("User not found");
+//       }
+//     })
+//     .catch((err) => {
+//       console.log(err);
+//     });
+// };
+
 //join premium
 router.post("/join-premium/:id", access, async (req, res) => {
-  let { phoneNumber, password } = req.body;
+  let { phoneNumber, accountNumber, password } = req.body;
+
   const userID = req.params.id;
 
   phoneNumber = phoneNumber.toString().trim();
@@ -1569,43 +1751,26 @@ router.post("/join-premium/:id", access, async (req, res) => {
           .compare(password, hashedPassword)
           .then((response) => {
             if (response) {
-              //correct pass
-              let auth = "Bearer " + req.access_token;
-              let datenow = datetime.create();
-              const timestamp = datenow.format("YmdHMS");
+              const amount = 1;
+              const body = `amount=${amount}&msisdn=${phoneNumber}&account_no=${accountNumber}`;
 
-              const password = new Buffer.from(
-                "174379" +
-                  "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919" +
-                  timestamp
-              ).toString("base64");
               request(
                 {
-                  url: "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
+                  url: "https://tinypesa.com/api/v1/express/initialize?https://ni-hire-backend.herokuapp.com/user/join-premium-response",
                   method: "POST",
                   headers: {
-                    Authorization: auth,
+                    Apikey: process.env.NEWTON_TINY_PESA_API_KEY,
+                    "Content-Type": "application/x-www-form-urlencoded",
                   },
-                  json: {
-                    BusinessShortCode: 174379,
-                    Password: password,
-                    Timestamp: timestamp,
-                    TransactionType: "CustomerPayBillOnline",
-                    Amount: 1,
-                    PartyA: parseInt(phoneNumber),
-                    PartyB: 174379,
-                    PhoneNumber: parseInt(phoneNumber),
-                    CallBackURL:
-                      "https://ni-hire-backend.herokuapp.com/user/join-premium-response",
-                    AccountReference: "CompanyXLTD",
-                    TransactionDesc: "Payment of X",
-                  },
+                  body: body,
                 },
                 function (error, response, body) {
                   if (error) {
                     console.log(error);
                   } else {
-                    res.status(200).json(body);
+                    const sendRes = JSON.parse(body);
+                    res.send(sendRes);
+                    console.log(sendRes);
                   }
                 }
               );
@@ -1633,6 +1798,7 @@ router.post("/join-premium/:id", access, async (req, res) => {
       }
     })
     .catch((err) => {
+      console.log(err);
       res.json({
         status: "Failed",
         message: "Error occured while checking user records",
