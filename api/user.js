@@ -100,6 +100,7 @@ router.post("/signup", async (req, res) => {
                   ? generalPromotedTitle
                   : "",
                 dateFeatured: "",
+                dateExpiring: "",
               });
               newUser
                 .save()
