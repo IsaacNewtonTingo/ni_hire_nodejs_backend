@@ -1925,6 +1925,7 @@ router.get("/get-my-premium-records/:id", async (req, res) => {
         //user found
         //search for their data
         await PremiumUser.find({ user: userID })
+          .sort({ dateFeatured: -1 })
           .then((response) => {
             if (response) {
               //records found
