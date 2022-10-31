@@ -276,9 +276,19 @@ router.get("/get-one-service-provider/:id", async (req, res) => {
   const serviceProviderID = req.params.id;
   if (serviceProviderID.match(/^[0-9a-fA-F]{24}$/)) {
     //valid ID
-    const serviceProvider = await ServiceProvider.findById(serviceProviderID)
-      .populate({ path: "service", populate: { path: "category" } })
-      .populate("provider")
+    const serviceProvider = await ServiceProvider.findById(
+      {
+        _id: serviceProviderID,
+      },
+      "-datePromoted -dateCreated -dateExpiring"
+    )
+      // .populate({ path: "service", populate: { path: "category" } })
+      .populate({ path: "service", select: "serviceName" })
+      .populate({
+        path: "provider",
+        select:
+          "-password -bio -verified -generalPromotedTitle -dateFeatured -dateCreated -dateExpiring",
+      })
       .catch((err) => {
         console.log(err);
       });
@@ -305,11 +315,19 @@ router.get("/category/get-all-service-providers/:id", async (req, res) => {
   const categoryID = req.params.id;
 
   if (categoryID.match(/^[0-9a-fA-F]{24}$/)) {
-    const serviceProviders = await ServiceProvider.find({
-      category: categoryID,
-    })
-      .populate({ path: "service", populate: { path: "category" } })
-      .populate("provider")
+    const serviceProviders = await ServiceProvider.find(
+      {
+        category: categoryID,
+      },
+      "-datePromoted -dateCreated -dateExpiring"
+    )
+      .populate({ path: "service", select: "serviceName" })
+      .populate({
+        path: "provider",
+        select:
+          "-password -bio -verified -generalPromotedTitle -datePromoted -dateCreated -dateExpiring -dateFeatured",
+      })
+
       .catch((err) => {
         console.log(err);
         res.json({
@@ -356,11 +374,19 @@ router.get(
 
           if (!location) {
             if (!isPromoted) {
-              const serviceProviders = await ServiceProvider.find({
-                service: serviceID,
-              })
-                .populate("service")
-                .populate("provider")
+              const serviceProviders = await ServiceProvider.find(
+                {
+                  service: serviceID,
+                },
+                "-datePromoted -dateCreated -dateExpiring"
+              )
+                .populate({ path: "service", select: "serviceName" })
+                .populate({
+                  path: "provider",
+                  select:
+                    "-password -bio -verified -generalPromotedTitle -dateFeatured -dateCreated -dateExpiring",
+                })
+
                 .sort({ isPromoted: -1 })
                 .skip(parseInt(pageNumber) * parseInt(limit))
                 .limit(parseInt(limit))
@@ -380,11 +406,19 @@ router.get(
                 serviceProviderCount,
               });
             } else {
-              const serviceProviders = await ServiceProvider.find({
-                service: serviceID,
-              })
-                .populate("service")
-                .populate("provider")
+              const serviceProviders = await ServiceProvider.find(
+                {
+                  service: serviceID,
+                },
+                "-datePromoted -dateCreated -dateExpiring"
+              )
+                .populate({ path: "service", select: "serviceName" })
+                .populate({
+                  path: "provider",
+                  select:
+                    "-password -bio -verified -generalPromotedTitle -dateFeatured -dateCreated -dateExpiring",
+                })
+
                 .sort({ rate: parseInt(rate), rating: parseInt(rating) })
                 .skip(parseInt(pageNumber) * parseInt(limit))
                 .limit(parseInt(limit))
@@ -406,11 +440,19 @@ router.get(
             }
           } else {
             if (!isPromoted) {
-              const serviceProviders = await ServiceProvider.find({
-                service: serviceID,
-              })
-                .populate("service")
-                .populate("provider")
+              const serviceProviders = await ServiceProvider.find(
+                {
+                  service: serviceID,
+                },
+                "-datePromoted -dateCreated -dateExpiring"
+              )
+                .populate({ path: "service", select: "serviceName" })
+                .populate({
+                  path: "provider",
+                  select:
+                    "-password -bio -verified -generalPromotedTitle -dateFeatured -dateCreated -dateExpiring",
+                })
+
                 .sort({ isPromoted: -1 })
                 .skip(parseInt(pageNumber) * parseInt(limit))
                 .limit(parseInt(limit))
@@ -438,11 +480,19 @@ router.get(
                 serviceProviderCount,
               });
             } else {
-              const serviceProviders = await ServiceProvider.find({
-                service: serviceID,
-              })
-                .populate("service")
-                .populate("provider")
+              const serviceProviders = await ServiceProvider.find(
+                {
+                  service: serviceID,
+                },
+                "-datePromoted -dateCreated -dateExpiring"
+              )
+                .populate({ path: "service", select: "serviceName" })
+                .populate({
+                  path: "provider",
+                  select:
+                    "-password -bio -verified -generalPromotedTitle -dateFeatured -dateCreated -dateExpiring",
+                })
+
                 .sort({ rate: parseInt(rate), rating: parseInt(rating) })
                 .skip(parseInt(pageNumber) * parseInt(limit))
                 .limit(parseInt(limit))
@@ -495,9 +545,17 @@ router.get("/get-featured", async (req, res) => {
     rating,
   } = req.query;
 
-  await ServiceProvider.find({ isPromoted: true })
-    .populate({ path: "service", populate: { path: "category" } })
-    .populate("provider")
+  await ServiceProvider.find(
+    { isPromoted: true },
+    "-datePromoted -dateCreated -dateExpiring"
+  )
+    .populate({ path: "service", select: "serviceName" })
+    .populate({
+      path: "provider",
+      select:
+        "-password -bio -verified -generalPromotedTitle -datePromoted -dateCreated -dateExpiring -dateFeatured",
+    })
+
     .skip(parseInt(pageNumber) * parseInt(limit))
     .limit(parseInt(limit))
 
@@ -785,7 +843,15 @@ router.get("/get-saved-services/:id", async (req, res) => {
       path: "provider",
       populate: { path: "service", select: "serviceName" },
     })
-    .populate({ path: "provider", populate: { path: "provider" } })
+    .populate({
+      path: "provider",
+      select: "-image2 -image3 -datePromoted -dateCreated -dateExpiring",
+      populate: {
+        path: "provider",
+        select:
+          "-password -generalPromotedTitle -dateFeatured -bio -profilePicture -verified -email -phoneNumber",
+      },
+    })
     .sort({ dateSaved: -1 })
 
     .then((response) => {
@@ -932,11 +998,20 @@ router.get("/recently-viewed/:id", async (req, res) => {
   const userID = req.params.id;
 
   await MyViewedServiceProvider.find({ user: userID })
+    .populate({ path: "provider", select: "-image2 -image3" })
     .populate({
       path: "provider",
       populate: { path: "service", select: "serviceName" },
     })
-    .populate({ path: "provider", populate: { path: "provider" } })
+    .populate({
+      path: "provider",
+      select: "-image2 -image3 -datePromoted -dateCreated -dateExpiring",
+      populate: {
+        path: "provider",
+        select:
+          "-password -generalPromotedTitle -dateFeatured -bio -profilePicture -verified -email -phoneNumber",
+      },
+    })
     .sort({ dateViewed: -1 })
 
     .limit(10)
@@ -1042,14 +1117,23 @@ router.get("/filter-service-provider", async (req, res) => {
   const newLocation = "Kenya";
 
   if (serviceName && !location) {
-    const servers = await ServiceProvider.find({})
+    const servers = await ServiceProvider.find(
+      {},
+      "-image2 -image3 -datePromoted -dateCreated"
+    )
       .sort({
         rate: parseInt(rate),
         rating: parseInt(rating),
         isPromoted: parseInt(isPromoted),
       })
-      .populate({ path: "service", populate: { path: "category" } })
-      .populate("provider")
+      .populate({ path: "service", select: "serviceName" })
+
+      .populate({
+        path: "provider",
+        select:
+          "-password -generalPromotedTitle -dateFeatured -bio -profilePicture -verified -email -phoneNumber",
+      })
+
       .skip(parseInt(pageNumber) * parseInt(limit))
       .limit(parseInt(limit))
 
@@ -1074,14 +1158,23 @@ router.get("/filter-service-provider", async (req, res) => {
       serviceProviderCount,
     });
   } else if (serviceName && location) {
-    const servers = await ServiceProvider.find({})
+    const servers = await ServiceProvider.find(
+      {},
+      "-image2 -image3 -datePromoted -dateCreated"
+    )
       .sort({
         rate: parseInt(rate),
         rating: parseInt(rating),
         isPromoted: parseInt(isPromoted),
       })
-      .populate({ path: "service", populate: { path: "category" } })
-      .populate("provider")
+      .populate({ path: "service", select: "serviceName" })
+
+      .populate({
+        path: "provider",
+        select:
+          "-password -generalPromotedTitle -dateFeatured -bio -profilePicture -verified -email -phoneNumber",
+      })
+
       .skip(parseInt(pageNumber) * parseInt(limit))
       .limit(parseInt(limit))
 
@@ -1108,14 +1201,23 @@ router.get("/filter-service-provider", async (req, res) => {
       serviceProviderCount,
     });
   } else if (!serviceName && location) {
-    const servers = await ServiceProvider.find({})
+    const servers = await ServiceProvider.find(
+      {},
+      "-image2 -image3 -datePromoted -dateCreated"
+    )
       .sort({
         rate: parseInt(rate),
         rating: parseInt(rating),
         isPromoted: parseInt(isPromoted),
       })
-      .populate({ path: "service", populate: { path: "category" } })
-      .populate("provider")
+      .populate({ path: "service", select: "serviceName" })
+
+      .populate({
+        path: "provider",
+        select:
+          "-password -generalPromotedTitle -dateFeatured -bio -profilePicture -verified -email -phoneNumber",
+      })
+
       .skip(parseInt(pageNumber) * parseInt(limit))
       .limit(parseInt(limit))
 
@@ -1140,13 +1242,22 @@ router.get("/filter-service-provider", async (req, res) => {
       serviceProviderCount,
     });
   } else {
-    const servers = await ServiceProvider.find({})
+    const servers = await ServiceProvider.find(
+      {},
+      "-image2 -image3 -datePromoted -dateCreated"
+    )
       .sort({
         isPromoted: parseInt(isPromoted),
         rate: parseInt(rate),
       })
-      .populate({ path: "service", populate: { path: "category" } })
-      .populate("provider")
+      .populate({ path: "service", select: "serviceName" })
+
+      .populate({
+        path: "provider",
+        select:
+          "-password -generalPromotedTitle -dateFeatured -bio -profilePicture -verified -email -phoneNumber",
+      })
+
       .skip(parseInt(pageNumber) * parseInt(limit))
       .limit(parseInt(limit))
 
@@ -1170,10 +1281,17 @@ router.get("/filter-service-provider", async (req, res) => {
 //get user services
 router.get("/get-my-services/:id", async (req, res) => {
   const userID = req.params.id;
-  await ServiceProvider.find({ provider: userID })
+  await ServiceProvider.find(
+    { provider: userID },
+    "-datePromoted -image2 -image3"
+  )
     .sort({ dateCreated: -1 })
-    .populate({ path: "service", populate: { path: "category" } })
-    .populate("provider")
+    .populate({ path: "service", select: "serviceName" })
+    .populate({
+      path: "provider",
+      select:
+        "-password -generalPromotedTitle -dateFeatured -bio -profilePicture -verified -email -phoneNumber -dateExpiring",
+    })
     .then((response) => {
       if (response.length > 0) {
         res.json(response);
@@ -1317,8 +1435,10 @@ router.get("/get-reviews-for-a-service/:id", async (req, res) => {
     .then(async (response) => {
       if (response) {
         await Review.find({ serviceReviewed: serviceProviderID })
-          .populate("serviceReviewed")
-          .populate("whoReviewed")
+          .populate({ path: "serviceReviewed", select: "_id" })
+          .populate({ path: "whoReviewed", select: "_id firstName lastName" })
+
+          .sort({ createdAt: -1 })
           .then((response) => {
             if (response.length > 0) {
               res.json(response);
@@ -1361,8 +1481,12 @@ router.get("/get-all-reviews/:id", async (req, res) => {
     .then(async (response) => {
       if (response) {
         const reviews = await Review.find({})
-          .populate("serviceReviewed")
-          .populate("whoReviewed")
+          .populate({
+            path: "serviceReviewed",
+            select: "_id",
+            populate: { path: "provider", select: "_id" },
+          })
+          .populate({ path: "whoReviewed", select: "_id firstName lastName" })
           .catch((err) => {
             console.log(err);
             res.json({

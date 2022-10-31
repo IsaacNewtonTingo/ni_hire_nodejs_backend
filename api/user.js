@@ -297,15 +297,16 @@ router.post("/signin", (req, res) => {
             });
           } else {
             const hashedPassword = data[0].password;
+            const userData = [{ _id: data[0]._id }];
+
             bcrypt
               .compare(password, hashedPassword)
               .then(async (result) => {
                 if (result) {
-                  console.log("Hurray");
                   res.json({
                     status: "Success",
                     message: "Login successfull",
-                    data: data,
+                    data: userData,
                   });
                 } else {
                   res.json({
@@ -338,6 +339,7 @@ router.post("/signin", (req, res) => {
   }
 });
 
+//password reset
 router.post("/request-password-reset", (req, res) => {
   const { email, redirectUrl } = req.body;
 
@@ -602,7 +604,10 @@ router.post("/update-phone-number", (req, res) => {
 
 //get featured users
 router.get("/featured-users", async (req, res) => {
-  const services = await User.find({ isFeatured: true });
+  const services = await User.find(
+    { isFeatured: true },
+    "_id firstName lastName generalPromotedTitle"
+  );
   res.send(services);
 });
 
@@ -610,7 +615,10 @@ router.get("/featured-users", async (req, res) => {
 router.get("/get-user-data/:id", async (req, res) => {
   const userID = req.params.id;
   if (userID.match(/^[0-9a-fA-F]{24}$/)) {
-    await User.findById(userID)
+    await User.findById(
+      { _id: userID },
+      "_id firstName lastName generalPromotedTitle email phoneNumber profilePicture bio location isFeatured dateFeatured dateExpiring"
+    )
       .then((response) => {
         res.json({
           data: response,
