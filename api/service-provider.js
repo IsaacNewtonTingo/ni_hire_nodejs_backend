@@ -1171,6 +1171,7 @@ router.get("/filter-service-provider", async (req, res) => {
 router.get("/get-my-services/:id", async (req, res) => {
   const userID = req.params.id;
   await ServiceProvider.find({ provider: userID })
+    .sort({ dateCreated: -1 })
     .populate({ path: "service", populate: { path: "category" } })
     .populate("provider")
     .then((response) => {
