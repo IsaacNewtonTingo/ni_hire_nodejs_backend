@@ -606,7 +606,7 @@ router.post("/update-phone-number", (req, res) => {
 router.get("/featured-users", async (req, res) => {
   const services = await User.find(
     { isFeatured: true },
-    "_id firstName lastName generalPromotedTitle"
+    "_id firstName lastName generalPromotedTitle profilePicture"
   );
   res.send(services);
 });
