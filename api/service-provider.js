@@ -1101,6 +1101,65 @@ router.get("/get-service-viewers/:id", async (req, res) => {
   });
 });
 
+//get service rating
+router.get("/get-service-rating/:id", async (req, res) => {
+  const serviceProviderID = req.params.id;
+  //check if the service is still available
+  await ServiceProvider.findOne({ _id: serviceProviderID }, "_id")
+    .then(async (response) => {
+      if (response) {
+        //is available
+        //get all reviews
+        await Review.find({ serviceReviewed: serviceProviderID }, "rating")
+          .then((response) => {
+            if (response.length > 0) {
+              //reviews found
+              const numReviews = response.length;
+
+              var totalRating = response
+                .map((reviews) => reviews.rating)
+                .reduce((acc, rating) => acc + rating);
+
+              var finalRating = totalRating / numReviews;
+
+              res.json({
+                status: "Success",
+                message: "Successfully compiled rating",
+                rating: finalRating.toFixed(1),
+              });
+            } else {
+              //no reviews
+              res.json({
+                status: "Success",
+                message: "No reviews found",
+                rating: 0,
+              });
+            }
+          })
+          .catch((err) => {
+            console.log(err);
+            res.json({
+              status: "Failed",
+              message: "Error occured while checking review records",
+            });
+          });
+      } else {
+        //not available
+        res.json({
+          status: "Failed",
+          message: "Service not found",
+        });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      res.json({
+        status: "Failed",
+        message: "Error occured while checking service records",
+      });
+    });
+});
+
 //search service providers
 router.get("/filter-service-provider", async (req, res) => {
   const {
