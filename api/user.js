@@ -385,7 +385,7 @@ const sendResetEmail = ({ _id, email }, redirectUrl, res) => {
         from: process.env.AUTH_EMAIL,
         to: email,
         subject: "Reset your password",
-        html: `<p>You have initiated a reset password process.</p><p>Link <b>expires in 60 minutes</p> <p>Here is your secret code:</p><p><strong>${resetString}</strong><br/>Enter the code in the app, with your new password.</p>`,
+        html: `<p>You have initiated a reset password process.</p><p>Code <b>expires in 60 minutes</p> <p>Here is your secret code:</p><p><strong>${resetString}</strong><br/>Enter the code in the app, with your new password.</p>`,
       };
 
       const saltRounds = 10;
@@ -1968,6 +1968,43 @@ router.get("/get-my-premium-records/:id", async (req, res) => {
         message: "Error occured while checking existing user records",
       });
     });
+});
+
+router.post("/register-merchant", access, async (req, res) => {
+  const name = "Ape 30 Technologies";
+  const description = "Join premium";
+  const link_mode = 3;
+  const kcbUUID = "5499e0d0-7f7c-11eb-b23e-9bddba995bf3";
+  const bank_acc_no = 1211781763;
+  const call_back_url =
+    "https://ni-hire-backend.herokuapp.com/user/create-merchant-callback";
+
+  const body = `name=${name}&description=${description}&link_mode=${link_mode}&bank=${kcbUUID}&bank_acc_no=${bank_acc_no}&call_back_url=${call_back_url}`;
+  const url = "https://tinypesa.com/api/v1/express/create_link";
+
+  request(
+    {
+      url: url,
+      method: "POST",
+      headers: {
+        Apikey: process.env.MERCHANT_API,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: body,
+    },
+    function (error, response, body) {
+      if (error) {
+        console.log(error);
+      } else {
+        const sendRes = JSON.parse(body);
+        console.log(sendRes);
+
+        res.json({
+          sendRes,
+        });
+      }
+    }
+  );
 });
 
 module.exports = router;
