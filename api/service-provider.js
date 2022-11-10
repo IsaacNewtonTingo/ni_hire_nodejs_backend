@@ -1377,7 +1377,6 @@ router.post("/add-review/:id", async (req, res) => {
 
   userID = userID.trim();
   reviewMessage = reviewMessage.trim();
-  rating = rating.toString().trim();
 
   //check if user exists
   await User.findOne({ _id: userID })
@@ -1395,7 +1394,7 @@ router.post("/add-review/:id", async (req, res) => {
                   serviceReviewed: serviceProviderID,
                   createdAt: Date.now(),
                   reviewMessage,
-                  rating: parseInt(rating),
+                  rating,
                 });
 
                 await newReview
