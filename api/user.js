@@ -1838,10 +1838,11 @@ router.post("/join-premium-response", (req, res) => {
   if (req.body.Body.stkCallback.ResultCode == 0) {
     //pass amount,phoneNumber to this function
     const phoneNumber =
-      req.body.Body.stkCallback.CallbackMetadata.Item[4].Value;
+      req.body.Body.stkCallback.CallbackMetadata.Item[3].Value;
     const amount = req.body.Body.stkCallback.CallbackMetadata.Item[0].Value;
 
     console.log(req.body.Body.stkCallback.CallbackMetadata);
+    console.log(phoneNumber);
 
     savePaymentToDB({ phoneNumber, amount });
   } else {
