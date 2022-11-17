@@ -681,7 +681,6 @@ router.put("/update-profile/:id", async (req, res) => {
                     res.json({
                       status: "Success",
                       message: "Profile updated successfully",
-                      data: response,
                     });
                   })
                   .catch((err) => {
