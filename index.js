@@ -9,7 +9,7 @@ setInterval(function () {
   console.log(
     "------------------------------Restarted----------------------------"
   );
-}, 300000);
+}, 1200000);
 
 const app = express();
 const PORT = process.env.PORT || 3000;

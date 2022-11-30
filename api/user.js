@@ -1741,7 +1741,7 @@ router.get("/access-token", access, (req, res) => {
 // };
 
 //join premium
-router.post("/join-premium/:id", access, async (req, res) => {
+router.post("/join-premium/:id", async (req, res) => {
   let { phoneNumber, accountNumber, password } = req.body;
 
   const userID = req.params.id;
