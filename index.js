@@ -1,7 +1,12 @@
 const express = require("express");
 const bodyParser = require("body-parser").json;
 const cors = require("cors");
+var http = require("http");
 require("dotenv").config();
+
+setInterval(function () {
+  http.get("https://ni-hire-backend.herokuapp.com/");
+}, 300000);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
