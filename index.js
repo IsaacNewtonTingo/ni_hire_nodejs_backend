@@ -6,6 +6,9 @@ require("dotenv").config();
 
 setInterval(function () {
   http.get("http://ni-hire-backend.herokuapp.com/");
+  console.log(
+    "------------------------------Restarted----------------------------"
+  );
 }, 300000);
 
 const app = express();
