@@ -5,7 +5,7 @@ var http = require("http");
 require("dotenv").config();
 
 setInterval(function () {
-  http.get("https://ni-hire-backend.herokuapp.com/");
+  http.get("http://ni-hire-backend.herokuapp.com/");
 }, 300000);
 
 const app = express();
