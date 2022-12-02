@@ -1946,9 +1946,8 @@ router.post("/join-premium/:id", async (req, res) => {
                       }, 20000);
                     } else {
                       res.json({
-                        status: "Error",
-                        ResponseDescription:
-                          "An error occured. Please try again later",
+                        status: "Failed",
+                        message: "An error occured. Please try again later",
                       });
                     }
                   }
