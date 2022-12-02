@@ -1780,6 +1780,10 @@ router.post("/join-premium/:id", async (req, res) => {
                 async function (error, response, body) {
                   if (error) {
                     console.log(error);
+                    res.json({
+                      status: "Failed",
+                      message: "An error occured. Please try again later",
+                    });
                   } else {
                     const sendRes = JSON.parse(body);
                     console.log(sendRes);
@@ -1833,101 +1837,125 @@ router.post("/join-premium/:id", async (req, res) => {
                                   { verified: true }
                                 )
                                   .populate("user")
-                                  .then(async (response) => {
-                                    if (response) {
-                                      //create complete payment
-                                      const newCompletePayment =
-                                        new CompletedPayment({
+                                  .then(async () => {
+                                    //create complete payment
+                                    const newCompletePayment =
+                                      new CompletedPayment({
+                                        user: userID,
+                                        userID,
+                                        amountPaid: amount,
+                                        accountNumber,
+                                        mpesaCode: newBody.mpesa_receipt,
+                                        dateOfPayment: Date.now(),
+                                        dateVerified: Date.now(),
+                                      });
+
+                                    await newCompletePayment
+                                      .save()
+                                      .then(async () => {
+                                        //update premium records
+                                        const newPremiumUser = new PremiumUser({
+                                          datePromoted: Date.now(),
+                                          dateExpiring: Date.now() + 604800000,
+                                          amount: amount,
                                           user: userID,
-                                          userID,
-                                          amountPaid: amount,
-                                          accountNumber,
-                                          mpesaCode: newBody.mpesa_receipt,
-                                          dateOfPayment: Date.now(),
-                                          dateVerified: Date.now(),
                                         });
 
-                                      await newCompletePayment
-                                        .save()
-                                        .then(async () => {
-                                          //update premium records
-                                          const newPremiumUser =
-                                            new PremiumUser({
-                                              datePromoted: Date.now(),
-                                              dateExpiring:
-                                                Date.now() + 604800000,
-                                              amount: amount,
-                                              user: userID,
-                                            });
+                                        await newPremiumUser
+                                          .save()
+                                          .then(async () => {
+                                            await User.updateOne(
+                                              { _id: userID },
+                                              {
+                                                isFeatured: true,
+                                                dateFeatured: Date.now(),
+                                                dateExpiring:
+                                                  Date.now() + 604800000,
+                                              }
+                                            )
+                                              .then(async () => {
+                                                await ServiceProvider.updateMany(
+                                                  { provider: userID },
+                                                  {
+                                                    isPromoted: true,
+                                                    datePromoted: Date.now(),
+                                                    dateExpiring:
+                                                      Date.now() + 604800000,
+                                                  }
+                                                )
+                                                  .then(async () => {
+                                                    //send me an email that someone has paid
+                                                    const mailOptions = {
+                                                      from: process.env
+                                                        .AUTH_EMAIL,
+                                                      to: "newtontingo@gmail.com",
+                                                      subject:
+                                                        "Premium user fee payment alert",
+                                                      html: `<p><strong>${phoneNumber}</strong> has paid <strong>KSH. ${amount}</strong> as premium user fee at niHire mobile</p>`,
+                                                    };
 
-                                          await newPremiumUser
-                                            .save()
-                                            .then(async () => {
-                                              await User.updateOne(
-                                                { _id: userID },
-                                                {
-                                                  isFeatured: true,
-                                                  dateFeatured: Date.now(),
-                                                  dateExpiring:
-                                                    Date.now() + 604800000,
-                                                }
-                                              )
-                                                .then(async () => {
-                                                  await ServiceProvider.updateMany(
-                                                    { provider: userID },
-                                                    {
-                                                      isPromoted: true,
-                                                      datePromoted: Date.now(),
-                                                      dateExpiring:
-                                                        Date.now() + 604800000,
-                                                    }
-                                                  )
-                                                    .then(async () => {
-                                                      //send me an email that someone has paid
-                                                      const mailOptions = {
-                                                        from: process.env
-                                                          .AUTH_EMAIL,
-                                                        to: "newtontingo@gmail.com",
-                                                        subject:
-                                                          "Premium user fee payment alert",
-                                                        html: `<p><strong>${phoneNumber}</strong> has paid <strong>KSH. ${amount}</strong> as premium user fee at niHire mobile</p>`,
-                                                      };
-
-                                                      await transporter
-                                                        .sendMail(mailOptions)
-                                                        .then(() => {
-                                                          res.json({
-                                                            status: "Success",
-                                                            message:
-                                                              "Payment made successfully",
-                                                            // data: newBody,
-                                                          });
-                                                        })
-                                                        .catch((err) => {
-                                                          console.log(err);
+                                                    await transporter
+                                                      .sendMail(mailOptions)
+                                                      .then(() => {
+                                                        res.json({
+                                                          status: "Success",
+                                                          message:
+                                                            "Payment made successfully",
+                                                          // data: newBody,
                                                         });
-                                                    })
-                                                    .catch((err) => {
-                                                      console.log(err);
+                                                      })
+                                                      .catch((err) => {
+                                                        console.log(err);
+                                                        res.json({
+                                                          status: "Failed",
+                                                          message:
+                                                            "An error occured while trying to send and email",
+                                                        });
+                                                      });
+                                                  })
+                                                  .catch((err) => {
+                                                    console.log(err);
+                                                    res.json({
+                                                      status: "Failed",
+                                                      message:
+                                                        "An error while trying to update your serrvices to be featured",
                                                     });
-                                                })
-                                                .catch((err) => {
-                                                  console.log(err);
+                                                  });
+                                              })
+                                              .catch((err) => {
+                                                console.log(err);
+                                                res.json({
+                                                  status: "Failed",
+                                                  message:
+                                                    "An error occured while trying to update your premium status",
                                                 });
-                                            })
-                                            .catch((err) => {
-                                              console.log(err);
+                                              });
+                                          })
+                                          .catch((err) => {
+                                            console.log(err);
+                                            res.json({
+                                              status: "Failed",
+                                              message:
+                                                "An error occured while trying to add new premium user",
                                             });
-                                        })
-                                        .catch((err) => {
-                                          console.log(err);
+                                          });
+                                      })
+                                      .catch((err) => {
+                                        console.log(err);
+                                        res.json({
+                                          status: "Failed",
+                                          message:
+                                            "An error occured while trying to add new completed payment",
                                         });
-                                    } else {
-                                      console.log("Something went wrong");
-                                    }
+                                      });
                                   })
                                   .catch((err) => {
                                     console.log(err);
+                                    res.json({
+                                      status: "Failed",
+                                      message:
+                                        "An error occured while updating pending payment",
+                                    });
                                   });
                               }
                             }
