@@ -1742,12 +1742,13 @@ router.get("/access-token", access, (req, res) => {
 
 //join premium
 router.post("/join-premium/:id", async (req, res) => {
-  let { phoneNumber, accountNumber, password } = req.body;
+  let { phoneNumber, password } = req.body;
 
   const userID = req.params.id;
 
   phoneNumber = phoneNumber.toString().trim();
   password = password.trim();
+  const accountNumber = uuidv4() + _id;
 
   //check if user exists
   await User.findOne({ _id: userID })
@@ -1782,11 +1783,60 @@ router.post("/join-premium/:id", async (req, res) => {
                     console.log(sendRes);
 
                     if (sendRes.success === true) {
-                      res.json({
-                        status: "Success",
-                        ResponseDescription:
-                          "Success. Request accepted for processing",
-                      });
+                      //check payment
+                      const interval = setInterval(() => {
+                        console.log("-----Checking payment------");
+                        request(
+                          {
+                            url: `https://tinypesa.com/api/v1/express/get_status/${accountNumber}`,
+                            method: "GET",
+                            headers: {
+                              Apikey: process.env.NEWTON_TINY_PESA_API_KEY,
+                              Accept: "application/json",
+                            },
+                          },
+                          function (error, response, body) {
+                            if (error) {
+                              console.log(err);
+                              res.json({
+                                status: "Failed",
+                                message:
+                                  "An error occured while trying to process your request",
+                              });
+                            } else {
+                              if (
+                                body.message ===
+                                "Transaction with given reference not found"
+                              ) {
+                                res.json({
+                                  status: "Failed",
+                                  message:
+                                    "An error occured trying to make the request. Please try again later",
+                                });
+                              } else {
+                                clearInterval(interval);
+                                clearTimeout(timeOut);
+
+                                console.log("Payment successful");
+                                res.json({
+                                  status: "Success",
+                                  message: "Payment made successfully",
+                                });
+                              }
+                            }
+                          }
+                        );
+                      }, 1000);
+
+                      const timeOut = setTimeout(() => {
+                        clearInterval(interval);
+
+                        res.json({
+                          status: "Failed",
+                          message:
+                            "You did not complete the payment process. Please make sure you are next to your phone and make the payment",
+                        });
+                      }, 20000);
                     } else {
                       res.json({
                         status: "Error",
