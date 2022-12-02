@@ -1842,6 +1842,7 @@ router.post("/join-premium/:id", async (req, res) => {
                                           userID,
                                           amountPaid: amount,
                                           accountNumber,
+                                          mpesaCode: newBody.mpesa_receipt,
                                           dateOfPayment: Date.now(),
                                           dateVerified: Date.now(),
                                         });
@@ -1882,6 +1883,7 @@ router.post("/join-premium/:id", async (req, res) => {
                                                     }
                                                   )
                                                     .then(async () => {
+                                                      //send me an email that someone has paid
                                                       const mailOptions = {
                                                         from: process.env
                                                           .AUTH_EMAIL,
@@ -1988,20 +1990,20 @@ router.post("/join-premium/:id", async (req, res) => {
 router.post("/join-premium-response", (req, res) => {
   console.log("-----Data received in callback url------");
 
-  //Payment is successful
-  if (req.body.Body.stkCallback.ResultCode == 0) {
-    //pass amount,phoneNumber to this function
-    const phoneNumber =
-      req.body.Body.stkCallback.CallbackMetadata.Item[4].Value;
-    const amount = req.body.Body.stkCallback.CallbackMetadata.Item[0].Value;
+  // //Payment is successful
+  // if (req.body.Body.stkCallback.ResultCode == 0) {
+  //   //pass amount,phoneNumber to this function
+  //   const phoneNumber =
+  //     req.body.Body.stkCallback.CallbackMetadata.Item[4].Value;
+  //   const amount = req.body.Body.stkCallback.CallbackMetadata.Item[0].Value;
 
-    console.log(req.body.Body.stkCallback.CallbackMetadata);
+  //   console.log(req.body.Body.stkCallback.CallbackMetadata);
 
-    // savePaymentToDB({ phoneNumber, amount });
-  } else {
-    //Payment unsuccessfull
-    console.log("Cacelled");
-  }
+  //   // savePaymentToDB({ phoneNumber, amount });
+  // } else {
+  //   //Payment unsuccessfull
+  //   console.log("Cacelled");
+  // }
 });
 
 const savePaymentToDB = async ({ amount, phoneNumber }) => {

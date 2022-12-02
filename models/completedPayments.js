@@ -9,6 +9,7 @@ const CompletedPaymentSchema = new Schema({
 
   amountPaid: Number,
   accountNumber: String,
+  mpesaCode: String,
   dateOfPayment: Date,
   dateVerified: Date,
 });
