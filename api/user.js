@@ -20,6 +20,8 @@ const { ProfileVisit } = require("../models/profile-visits");
 const { BugReport } = require("../models/bug-report");
 const { EmailChange } = require("../models/email-change");
 const { PremiumUser } = require("../models/premium-user");
+const PendingPayment = require("../models/pendingPayment");
+const CompletedPayment = require("../models/completedPayments");
 
 const currentUrl = "https://ni-hire-backend.herokuapp.com/";
 
@@ -1775,7 +1777,7 @@ router.post("/join-premium/:id", async (req, res) => {
                   },
                   body: body,
                 },
-                function (error, response, body) {
+                async function (error, response, body) {
                   if (error) {
                     console.log(error);
                   } else {
@@ -1783,6 +1785,20 @@ router.post("/join-premium/:id", async (req, res) => {
                     console.log(sendRes);
 
                     if (sendRes.success === true) {
+                      //set pending pay
+
+                      const newPendingPayment = new PendingPayment({
+                        user: userID,
+                        amount,
+                        accountNumber,
+                        dateOfPayment: Date.now(),
+                        verified: false,
+                      });
+
+                      await newPendingPayment.save().catch((err) => {
+                        console.log(err);
+                      });
+
                       //check payment
                       const interval = setInterval(() => {
                         console.log("-----Checking payment------");
@@ -1795,7 +1811,7 @@ router.post("/join-premium/:id", async (req, res) => {
                               Accept: "application/json",
                             },
                           },
-                          function (error, response, body) {
+                          async function (error, response, body) {
                             if (error) {
                               console.log(err);
                               res.json({
@@ -1811,12 +1827,106 @@ router.post("/join-premium/:id", async (req, res) => {
                                 clearTimeout(timeOut);
 
                                 console.log("Payment successful");
-                                console.log(newBody);
-                                res.json({
-                                  status: "Success",
-                                  message: "Payment made successfully",
-                                  data: newBody,
-                                });
+                                //update pending
+                                await PendingPayment.findOneAndUpdate(
+                                  { accountNumber },
+                                  { verified: true }
+                                )
+                                  .populate("user")
+                                  .then(async (response) => {
+                                    if (response) {
+                                      //create complete payment
+                                      const newCompletePayment =
+                                        new CompletedPayment({
+                                          user: userID,
+                                          userID,
+                                          amountPaid: amount,
+                                          accountNumber,
+                                          dateOfPayment: Date.now(),
+                                          dateVerified: Date.now(),
+                                        });
+
+                                      await newCompletePayment
+                                        .save()
+                                        .then(async () => {
+                                          //update premium records
+                                          const newPremiumUser =
+                                            new PremiumUser({
+                                              datePromoted: Date.now(),
+                                              dateExpiring:
+                                                Date.now() + 604800000,
+                                              amount: amount,
+                                              user: userID,
+                                            });
+
+                                          await newPremiumUser
+                                            .save()
+                                            .then(async () => {
+                                              await User.updateOne(
+                                                { _id: userID },
+                                                {
+                                                  isFeatured: true,
+                                                  dateFeatured: Date.now(),
+                                                  dateExpiring:
+                                                    Date.now() + 604800000,
+                                                }
+                                              )
+                                                .then(async () => {
+                                                  await ServiceProvider.updateMany(
+                                                    { provider: userID },
+                                                    {
+                                                      isPromoted: true,
+                                                      datePromoted: Date.now(),
+                                                      dateExpiring:
+                                                        Date.now() + 604800000,
+                                                    }
+                                                  )
+                                                    .then(async () => {
+                                                      const mailOptions = {
+                                                        from: process.env
+                                                          .AUTH_EMAIL,
+                                                        to: "newtontingo@gmail.com",
+                                                        subject:
+                                                          "Premium user fee payment alert",
+                                                        html: `<p><strong>${phoneNumber}</strong> has paid <strong>KSH. ${amount}</strong> as premium user fee at niHire mobile</p>`,
+                                                      };
+
+                                                      await transporter
+                                                        .sendMail(mailOptions)
+                                                        .then(() => {
+                                                          res.json({
+                                                            status: "Success",
+                                                            message:
+                                                              "Payment made successfully",
+                                                            data: newBody,
+                                                          });
+                                                        })
+                                                        .catch((err) => {
+                                                          console.log(err);
+                                                        });
+                                                    })
+                                                    .catch((err) => {
+                                                      console.log(err);
+                                                    });
+                                                })
+                                                .catch((err) => {
+                                                  console.log(err);
+                                                });
+                                            })
+                                            .catch((err) => {
+                                              console.log(err);
+                                            });
+                                        })
+                                        .catch((err) => {
+                                          console.log(err);
+                                        });
+                                    } else {
+                                      console.log("Something went wrong");
+                                    }
+                                  })
+                                  .catch((err) => {
+                                    console.log(err);
+                                  });
                               }
                             }
                           }
