@@ -1986,7 +1986,7 @@ router.post("/join-premium/:id", async (req, res) => {
 
 //callback
 router.post("/join-premium-response", (req, res) => {
-  console.log(req.body.Body);
+  console.log("-----Data received in callback url------");
 
   //Payment is successful
   if (req.body.Body.stkCallback.ResultCode == 0) {
@@ -1997,7 +1997,7 @@ router.post("/join-premium-response", (req, res) => {
 
     console.log(req.body.Body.stkCallback.CallbackMetadata);
 
-    savePaymentToDB({ phoneNumber, amount });
+    // savePaymentToDB({ phoneNumber, amount });
   } else {
     //Payment unsuccessfull
     console.log("Cacelled");
