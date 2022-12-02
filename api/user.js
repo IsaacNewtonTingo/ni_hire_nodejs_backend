@@ -1748,7 +1748,7 @@ router.post("/join-premium/:id", async (req, res) => {
 
   phoneNumber = phoneNumber.toString().trim();
   password = password.trim();
-  const accountNumber = uuidv4() + _id;
+  const accountNumber = uuidv4() + userID;
 
   //check if user exists
   await User.findOne({ _id: userID })
@@ -1760,7 +1760,7 @@ router.post("/join-premium/:id", async (req, res) => {
           .compare(password, hashedPassword)
           .then((response) => {
             if (response) {
-              const amount = 100;
+              const amount = 1;
               const body = `amount=${amount}&msisdn=${parseInt(
                 phoneNumber
               )}&account_no=${accountNumber}`;
@@ -1804,23 +1804,18 @@ router.post("/join-premium/:id", async (req, res) => {
                                   "An error occured while trying to process your request",
                               });
                             } else {
-                              if (
-                                body.message ===
-                                "Transaction with given reference not found"
-                              ) {
-                                res.json({
-                                  status: "Failed",
-                                  message:
-                                    "An error occured trying to make the request. Please try again later",
-                                });
-                              } else {
+                              const newBody = JSON.parse(body);
+
+                              if (newBody.is_complete === 1) {
                                 clearInterval(interval);
                                 clearTimeout(timeOut);
 
                                 console.log("Payment successful");
+                                console.log(newBody);
                                 res.json({
                                   status: "Success",
                                   message: "Payment made successfully",
+                                  data: newBody,
                                 });
                               }
                             }
