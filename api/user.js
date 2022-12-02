@@ -1900,7 +1900,7 @@ router.post("/join-premium/:id", async (req, res) => {
                                                             status: "Success",
                                                             message:
                                                               "Payment made successfully",
-                                                            data: newBody,
+                                                            // data: newBody,
                                                           });
                                                         })
                                                         .catch((err) => {
