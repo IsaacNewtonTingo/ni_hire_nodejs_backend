@@ -1133,6 +1133,20 @@ router.post("/bug-report/:id", async (req, res) => {
               subject: "Bug report",
               html: `<p>${message}</p>
                       <br/>
+                      Screenshot 1: ${
+                        image1 ? image1 : "No screenshot provided"
+                      } 
+                      <br/>
+                      Screenshot 2: ${
+                        image2 ? image2 : "No screenshot provided"
+                      } 
+                      <br/>
+                      Screenshot 3: ${
+                        image3 ? image3 : "No screenshot provided"
+                      } 
+                      <br/>
+
+                      <br/>
                       <br/>
                       <p>Name:<strong>${userName}</strong></p>
                       <p>Phone number:<strong>${phoneNumber}</strong></p>
