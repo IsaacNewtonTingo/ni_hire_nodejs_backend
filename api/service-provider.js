@@ -1497,6 +1497,7 @@ router.get("/get-reviews-for-a-service/:id", async (req, res) => {
           .populate({ path: "whoReviewed", select: "_id firstName lastName" })
 
           .sort({ createdAt: -1 })
+          .limit(20)
           .then((response) => {
             if (response.length > 0) {
               res.json(response);
@@ -1545,6 +1546,7 @@ router.get("/get-all-reviews/:id", async (req, res) => {
             populate: { path: "provider", select: "_id" },
           })
           .populate({ path: "whoReviewed", select: "_id firstName lastName" })
+          .limit(20)
           .catch((err) => {
             console.log(err);
             res.json({
