@@ -115,10 +115,13 @@ router.post("/add-service", async (req, res) => {
                             //service was there and is deleted
                             newServiceProvider
                               .save()
-                              .then(() => {
+                              .then((response) => {
+                                const serviceProviderID = response._id;
                                 res.json({
                                   status: "Success",
-                                  message: "Replaced successfully",
+                                  message:
+                                    "You had initially posted a similar service. It has been replaced",
+                                  data: serviceProviderID,
                                 });
                               })
                               .catch((err) => {
@@ -133,10 +136,12 @@ router.post("/add-service", async (req, res) => {
                             //service wasnt there
                             newServiceProvider
                               .save()
-                              .then(() => {
+                              .then((response) => {
+                                const serviceProviderID = response._id;
                                 res.json({
                                   status: "Success",
                                   message: "Posted successfully",
+                                  data: serviceProviderID,
                                 });
                               })
                               .catch((err) => {
@@ -184,10 +189,13 @@ router.post("/add-service", async (req, res) => {
                           //add service provider
                           newServiceProvider
                             .save()
-                            .then(() => {
+                            .then((response) => {
+                              const serviceProviderID = response._id;
+
                               res.json({
                                 status: "Success",
                                 message: "Posted successfully",
+                                data: serviceProviderID,
                               });
                             })
                             .catch((err) => {
