@@ -6,6 +6,10 @@ const BugReportSchema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
   },
+  image1: String,
+  image2: String,
+  image3: String,
+
   message: String,
   reportDate: Date,
 });

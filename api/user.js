@@ -1100,7 +1100,7 @@ router.get("/get-profile-visits/:id", async (req, res) => {
 //Bug report
 router.post("/bug-report/:id", async (req, res) => {
   const userID = req.params.id;
-  let { message } = req.body;
+  let { message, image1, image2, image3 } = req.body;
 
   message = message.trim();
 
@@ -1117,6 +1117,9 @@ router.post("/bug-report/:id", async (req, res) => {
         const newBugReport = new BugReport({
           whoReported: userID,
           message: message,
+          image1,
+          image2,
+          image3,
           reportDate: Date.now(),
         });
 
