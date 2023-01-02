@@ -6,6 +6,8 @@ require("dotenv").config();
 
 setInterval(function () {
   http.get("http://ni-hire-backend.herokuapp.com/");
+  require("./api/auto-update-records");
+
   console.log(
     "------------------------------Restarted----------------------------"
   );
@@ -22,7 +24,6 @@ app.listen(PORT, () => {
 });
 
 require("./config/db");
-require("./api/auto-update-records");
 
 const UserRouter = require("./api/user");
 const CategoryRouter = require("./api/category");
